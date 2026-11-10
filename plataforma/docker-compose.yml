@@ -1,0 +1,249 @@
+# WARNING: Não faça deploy deste arquivo diretamente em produção, ele é apenas um exemplo para fins de aprendizado.
+# Este arquivo serve como suporte para a disciplina CCM520 - Internet das Coisas (Projeto 2).
+#
+# Ambiente do Projeto 2: a plataforma das Aulas 8 e 9, com o IoT Agent SEM alterações.
+# A estufa (ESP32 real ou Wokwi) publica no broker PÚBLICO da HiveMQ; o Mosquitto local traz para
+# o IoT Agent, por uma PONTE (bridge), somente os tópicos da API key do grupo.
+#
+#   ESP32 / Wokwi --MQTT--> broker.hivemq.com <==ponte==> Mosquitto :1883 <--> IoT Agent JSON --NGSI-v2--> Orion :1026
+#     (internet)            (público, internet)         (mosquitto.conf)       :4041                          |  MongoDB
+#                                                                                                             | subscrições
+#                                                        consumidor :3001 (alertas) <-------------------------+
+#                                                        Cygnus :5050 --> MySQL :3306 --> Grafana :3000
+#                                                                         (histórico)      (painel)
+#
+# Antes de subir: complete os TODO de mosquitto/mosquitto.conf (broker público, client id e tópicos
+# da ponte com a SUA API key). Este arquivo não precisa de alteração.
+#
+# Uso (na pasta deste arquivo):
+#   docker compose pull       -> baixa as imagens (cerca de 4 GB; faça antes da aula)
+#   docker compose up -d      -> cria e inicia os contêineres em segundo plano
+#   docker compose ps         -> mostra o estado (aguarde "healthy"; o Cygnus leva ~20 s)
+#   docker compose logs mosquitto      -> estado da ponte com o broker público
+#   docker exec -it mosquitto mosquitto_sub -v -t "#"   -> todo o tráfego do broker LOCAL
+#   docker compose down       -> encerra (com -v apaga também os dados: entidades, histórico e painéis)
+#
+# Exemplo resolvido: a lâmpada inteligente simulada sobe junto com o ambiente.
+#   docker compose logs -f lampada-simulada    -> medidas e comandos da lâmpada
+#
+# Atenção: encerre os ambientes das Aulas 8 e 9 antes (docker compose down na pasta de cada uma):
+# os contêineres usam os mesmos nomes e as mesmas portas.
+
+name: projeto2
+
+services:
+
+  # =========================================================================
+  # CONTEXTO ATUAL (Aulas 6 e 7)
+  # =========================================================================
+
+  orion:
+    image: quay.io/fiware/orion:4.5.0
+    hostname: orion
+    container_name: fiware-orion
+    depends_on:
+      mongo-db:
+        condition: service_healthy
+    ports:
+      - "1026:1026" # API NGSI-v2
+    command: -dbURI mongodb://mongo-db -logLevel INFO -httpTimeout 5000
+    healthcheck:
+      test: curl --fail -s http://localhost:1026/version || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongo-db:
+    image: mongo:8.0
+    hostname: mongo-db
+    container_name: db-mongo
+    ports:
+      - "27017:27017" # Exposta apenas para inspeção/depuração
+    volumes:
+      - mongo-db:/data/db # Entidades e subscrições do Orion; grupos e dispositivos do IoT Agent
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # =========================================================================
+  # CONECTIVIDADE COM DISPOSITIVOS (Aula 8): IoT Agent igual ao das Aulas 8 e 9
+  # =========================================================================
+
+  iot-agent:
+    image: quay.io/fiware/iotagent-json:3.14.0
+    hostname: iot-agent
+    container_name: fiware-iot-agent
+    depends_on:
+      orion:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    ports:
+      - "4041:4041" # North Port: provisionamento e comandos
+      - "7896:7896" # Medidas via HTTP (útil para testar sem MQTT)
+    environment:
+      - IOTA_CB_HOST=orion
+      - IOTA_CB_PORT=1026
+      - IOTA_CB_NGSI_VERSION=v2
+      - IOTA_NORTH_PORT=4041
+      - IOTA_PROVIDER_URL=http://iot-agent:4041
+      - IOTA_REGISTRY_TYPE=mongodb
+      - IOTA_MONGO_URI=mongodb://mongo-db:27017/iotagentjson
+      - IOTA_MQTT_HOST=mosquitto            # broker LOCAL (a ponte leva e traz do broker público)
+      - IOTA_MQTT_PORT=1883
+      - IOTA_DEFAULT_TRANSPORT=MQTT
+      - IOTA_HTTP_PORT=7896
+      - IOTA_DEFAULT_RESOURCE=/iot/json
+      - IOTA_TIMESTAMP=true                 # acrescenta TimeInstant a cada medida
+      - IOTA_AMQP_DISABLED=true
+      - IOTA_LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4041/iot/about', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Broker MQTT local + ponte com o broker público (configuração em mosquitto/mosquitto.conf).
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22
+    hostname: mosquitto
+    container_name: mosquitto
+    ports:
+      - "1883:1883" # MQTT local (mosquitto_sub, MQTTX no seu computador)
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-W", "3"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # =========================================================================
+  # SERVIÇOS QUE CONSOMEM O CONTEXTO (Aulas 7 e 9)
+  # =========================================================================
+
+  # Context Consumer: recebe as notificações de alerta (http://consumidor:3000/<caminho>).
+  consumidor:
+    image: python:3.12-alpine
+    hostname: consumidor
+    container_name: consumidor
+    ports:
+      - "3001:3000" # no seu computador: http://localhost:3001/notificacoes (a 3000 é do Grafana)
+    volumes:
+      - ./servicos:/app:ro
+    command: python -u /app/consumidor.py
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Histórico: o Cygnus grava no MySQL as mudanças notificadas pelo Orion (Aula 9).
+  cygnus:
+    image: quay.io/fiware/cygnus-ngsi:3.16.0
+    hostname: cygnus
+    container_name: fiware-cygnus
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    ports:
+      - "5050:5050" # Recebe as notificações do Orion: http://cygnus:5050/notify
+      - "5080:5080" # API de gestão (versão, estatísticas)
+    environment:
+      - CYGNUS_MYSQL_HOST=mysql-db
+      - CYGNUS_MYSQL_PORT=3306
+      - CYGNUS_MYSQL_USER=cygnus
+      - CYGNUS_MYSQL_PASS=cygnus2026
+      - CYGNUS_MYSQL_SERVICE_PORT=5050
+      - CYGNUS_MYSQL_DATA_MODEL=dm-by-service-path # uma tabela por caminho de serviço: /estufa -> estufa
+      - CYGNUS_MYSQL_ATTR_PERSISTENCE=row    # uma linha por atributo notificado
+      - CYGNUS_SERVICE_PORT=5050
+      - CYGNUS_API_PORT=5080
+      - CYGNUS_LOG_LEVEL=INFO
+    healthcheck:
+      test: curl --fail -s http://localhost:5080/v1/version || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  mysql-db:
+    image: mysql:8.4
+    hostname: mysql-db
+    container_name: db-mysql
+    ports:
+      - "3306:3306" # Mude para "3307:3306" se já houver um MySQL no computador
+    environment:
+      - MYSQL_ROOT_PASSWORD=fei2026
+      - MYSQL_DATABASE=fei                   # banco do serviço "fei" (fiware-service)
+      - MYSQL_USER=cygnus
+      - MYSQL_PASSWORD=cygnus2026
+    volumes:
+      - mysql-db:/var/lib/mysql
+      - ./mysql:/docker-entrypoint-initdb.d:ro # cria o usuário somente leitura do Grafana
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pfei2026"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  # Painel (Aula 9): http://localhost:3000 (admin / admin)
+  grafana:
+    image: grafana/grafana:13.2.4
+    hostname: grafana
+    container_name: grafana
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_NEWS_NEWS_FEED_ENABLED=false
+    volumes:
+      - grafana:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # =========================================================================
+  # EXEMPLO RESOLVIDO: lâmpada inteligente simulada (postman/Exemplo - Lâmpada...)
+  # Fala com o Mosquitto LOCAL (não usa a ponte nem o broker público), com a
+  # API key lampada2026 e o caminho /lampada: não interfere na estufa.
+  # Precisa de internet na primeira vez, para instalar o paho-mqtt.
+  # =========================================================================
+
+  lampada-simulada:
+    image: python:3.12-alpine
+    container_name: lampada-simulada
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    environment:
+      - MQTT_BROKER=mosquitto
+      - API_KEY=lampada2026
+      - DEVICE_ID=lampada001
+      - INTERVALO=5
+    volumes:
+      - ./servicos:/app:ro
+    command: sh -c "pip install -q --disable-pip-version-check --root-user-action=ignore paho-mqtt==2.1.0 && python -u /app/lampada_simulada.py"
+    healthcheck:
+      # saudável se publicou uma medida nos últimos 15 s (o simulador atualiza /tmp/vivo)
+      test: ["CMD", "python", "-c", "import os, sys, time; sys.exit(0 if time.time() - os.path.getmtime('/tmp/vivo') < 15 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 30s
+
+volumes:
+  mongo-db:
+  mysql-db:
+  grafana:

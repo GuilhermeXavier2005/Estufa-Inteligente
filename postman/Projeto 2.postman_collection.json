@@ -1,0 +1,2251 @@
+{
+	"info": {
+		"_postman_id": "1aa9761f-e243-542d-b4a6-694d7c3234c9",
+		"name": "CCM520 - Projeto 2 - Estufa na plataforma FIWARE (template)",
+		"description": "Projeto 2 - Estufa inteligente na plataforma FIWARE: a estufa no broker público broker.hivemq.com e uma ponte até o Mosquitto local.\n\nSiga o guia passo a passo. Você define a variável `apikey` e escreve o **corpo** de 4 requisições, marcadas com **[Complete o corpo]**: 2.1 (grupo de serviço), 2.2 (dispositivo), 4.1 (subscrição do Cygnus) e 4.4 (notificação para o serviço externo). Todas as outras requisições ([Pronto] e [Verificação]) já estão prontas.\n\nPara entregar: rode a coleção inteira no Runner, com a estufa ligada. A pasta *0* apaga o provisionamento e as subscrições, e as etapas recriam. Para recomeçar TUDO (inclusive histórico e painel): `docker compose down -v` e `docker compose up -d` na pasta `plataforma`.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0 - Recomeçar do zero [Pronto]",
+			"description": "Apaga subscrições, dispositivo, entidade e grupo do seu caminho. O histórico do MySQL e o painel permanecem. Rode a coleção inteira no Runner (começando por aqui) para provar que tudo funciona a partir do zero. Reset completo (contêineres e volumes, inclusive histórico e painel): `docker compose down -v` na pasta `plataforma`.",
+			"item": [
+				{
+					"name": "0.1 Apaga as subscrições do caminho",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions"
+							]
+						},
+						"description": "Lista as subscrições do caminho e apaga **todas** (use antes de rodar a coleção inteira no Runner)."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const subs = pm.response.json();",
+									"subs.forEach(s => pm.sendRequest({ url: \"http://\" + pm.collectionVariables.get(\"orion\") + \"/v2/subscriptions/\" + s.id, method: \"DELETE\",",
+									"  header: { \"fiware-service\": pm.collectionVariables.get(\"servico\"), \"fiware-servicepath\": pm.collectionVariables.get(\"caminho\") } }, () => {}));",
+									"pm.test(\"Subscrições apagadas: \" + subs.length, () => pm.expect(subs).to.be.an(\"array\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "0.2 Apaga o dispositivo",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/devices/{{device_id}}",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"devices",
+								"{{device_id}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 (ou 404 se não existia)\", () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "0.3 Apaga a entidade",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 (ou 404 se não existia)\", () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "0.4 Apaga o grupo",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/groups?resource=/iot/json&apikey={{apikey}}",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"groups"
+							],
+							"query": [
+								{
+									"key": "resource",
+									"value": "/iot/json"
+								},
+								{
+									"key": "apikey",
+									"value": "{{apikey}}"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 (ou 404 se não existia)\", () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Etapa 1 - Ambiente",
+			"description": "Verificações prontas: o ambiente de `plataforma/docker-compose.yml` está no ar.",
+			"item": [
+				{
+					"name": "1.1 [Verificação] Orion no ar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{orion}}/version",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"version"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Orion 4.5.0\", () => pm.expect(pm.response.json().orion.version).to.eql(\"4.5.0\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.2 [Verificação] IoT Agent no ar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/about",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"about"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"IoT Agent JSON 3.14.0\", () => pm.expect(pm.response.json().version).to.eql(\"3.14.0\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.3 [Verificação] Cygnus no ar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{cygnus}}/v1/version",
+							"protocol": "http",
+							"host": [
+								"{{cygnus}}"
+							],
+							"path": [
+								"v1",
+								"version"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.4 [Verificação] Grafana no ar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{grafana}}/api/health",
+							"protocol": "http",
+							"host": [
+								"{{grafana}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Banco do Grafana ok\", () => pm.expect(pm.response.json().database).to.eql(\"ok\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.5 [Verificação] Consumidor no ar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{consumidor}}/",
+							"protocol": "http",
+							"host": [
+								"{{consumidor}}"
+							],
+							"path": []
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.6 [Verificação] Variável apikey preenchida",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/about",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"about"
+							]
+						},
+						"description": "Edite as variáveis da coleção: `apikey` deve ser a **mesma** API key usada na ponte (`mosquitto/mosquitto.conf`)."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const k = pm.collectionVariables.get(\"apikey\");",
+									"pm.test(\"apikey com 4 a 24 letras e números\", () => pm.expect(k).to.match(/^[A-Za-z0-9]{4,24}$/));",
+									"pm.test(\"apikey diferente do valor de exemplo\", () => pm.expect(k).to.not.eql(\"troqueesteid\"));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Etapa 2 - Provisionamento",
+			"description": "Grupo, dispositivo e o registro que o IoT Agent cria no Orion.",
+			"item": [
+				{
+					"name": "2.1 [Complete o corpo] Grupo de serviço da sua API key",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/groups",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"groups"
+							]
+						},
+						"description": "Crie no IoT Agent o **grupo de configuração** da sua API key (`{{apikey}}`) para entidades do tipo `Greenhouse`, recurso `/iot/json`, apontando para o Orion **visto de dentro da rede Docker**.\n\nVocê está em um broker **público**: medidas de dispositivos que você não provisionou devem ser **rejeitadas**.\n\n**Você escreve só o corpo** (aba *Body*, JSON). Método, URL e cabeçalhos já estão prontos: não os altere.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"201 Created (ou 409 se o grupo já existia)\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));",
+									"pm.sendRequest({ url: \"http://\" + pm.collectionVariables.get(\"iotagent\") + \"/iot/groups\",",
+									"  header: { \"fiware-service\": pm.collectionVariables.get(\"servico\"), \"fiware-servicepath\": pm.collectionVariables.get(\"caminho\") } }, (err, res) => {",
+									"  const g = (res.json().groups || []).find(x => x.apikey === pm.collectionVariables.get(\"apikey\"));",
+									"  pm.test(\"Grupo da apikey existe no serviço/caminho da coleção\", () => pm.expect(g).to.exist);",
+									"  if (!g) return;",
+									"  pm.test(\"Tipo Greenhouse\", () => pm.expect(g.entity_type).to.eql(\"Greenhouse\"));",
+									"  pm.test(\"Recurso /iot/json\", () => pm.expect(g.resource).to.eql(\"/iot/json\"));",
+									"  if (g.cbroker) pm.test(\"Orion visto de dentro da rede Docker\", () => pm.expect(g.cbroker).to.match(/^http:\\/\\/orion:1026/));",
+									"  pm.test(\"Dispositivos não provisionados são rejeitados\", () => pm.expect(g.autoprovision).to.eql(false));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.2 [Complete o corpo] Dispositivo da estufa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/devices",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"devices"
+							]
+						},
+						"description": "Provisione o dispositivo `{{device_id}}` (transporte MQTT) ligado à entidade `{{entidade}}` do tipo `Greenhouse`, com os **7 atributos** (medidas), os **4 comandos** e os **2 atributos estáticos** da tabela do README (Etapa 2). As chaves curtas (`object_id`) são escolha do grupo, mas precisam ser **as mesmas** do firmware.\n\n**Você escreve só o corpo** (aba *Body*, JSON). Método, URL e cabeçalhos já estão prontos: não os altere.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"201 Created (ou 409 se já existia)\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));",
+									"pm.sendRequest({ url: \"http://\" + pm.collectionVariables.get(\"iotagent\") + \"/iot/devices/\" + pm.collectionVariables.get(\"device_id\"),",
+									"  header: { \"fiware-service\": pm.collectionVariables.get(\"servico\"), \"fiware-servicepath\": pm.collectionVariables.get(\"caminho\") } }, (err, res) => {",
+									"  pm.test(\"Dispositivo encontrado no IoT Agent\", () => pm.expect(res.code).to.eql(200));",
+									"  if (res.code !== 200) return;",
+									"  const d = res.json();",
+									"  pm.test(\"Mesma apikey do grupo\", () => pm.expect(d.apikey).to.eql(pm.collectionVariables.get(\"apikey\")));",
+									"  pm.test(\"Entidade e tipo corretos\", () => { pm.expect(d.entity_name).to.eql(pm.collectionVariables.get(\"entidade\")); pm.expect(d.entity_type).to.eql(\"Greenhouse\"); });",
+									"  pm.test(\"Transporte MQTT\", () => pm.expect(d.transport).to.eql(\"MQTT\"));",
+									"  const esperados = [\"temperature\", \"relativeHumidity\", \"soilMoisture\", \"illuminance\", \"relayState\", \"windowAngle\", \"samplingInterval\"];",
+									"  const attrs = d.attributes || [];",
+									"  esperados.forEach(n => pm.test(\"Atributo \" + n + \" (Number, com object_id)\", () => { const a = attrs.find(x => x.name === n); pm.expect(a, n).to.exist; pm.expect(a.type).to.eql(\"Number\"); pm.expect(a.object_id, \"defina o object_id de \" + n).to.be.a(\"string\").and.not.empty; }));",
+									"  pm.test(\"object_id diferentes entre si\", () => { const ids = attrs.map(a => a.object_id); pm.expect(new Set(ids).size).to.eql(ids.length); });",
+									"  [\"setRelay\", \"setServo\", \"setInterval\", \"setSending\"].forEach(c => pm.test(\"Comando \" + c, () => pm.expect((d.commands || []).map(x => x.name)).to.include(c)));",
+									"  const est = d.static_attributes || [];",
+									"  pm.test(\"Estático name (Text)\", () => pm.expect(est.some(s => s.name === \"name\" && s.type === \"Text\")).to.be.true);",
+									"  pm.test(\"Estático location (geo:json, Point)\", () => { const l = est.find(s => s.name === \"location\"); pm.expect(l).to.exist; pm.expect(l.type).to.eql(\"geo:json\"); pm.expect(l.value.type).to.eql(\"Point\"); });",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.3 [Pronto] Quem atende os comandos da estufa?",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/registrations",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"registrations"
+							]
+						},
+						"description": "**Requisição pronta.** Consultando o **Orion**, descubra qual serviço ele aciona quando alguém atualiza um comando da estufa.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const regs = pm.response.json();",
+									"pm.test(\"A resposta é uma lista de registros\", () => pm.expect(regs).to.be.an(\"array\").that.is.not.empty);",
+									"const r = (Array.isArray(regs) ? regs : []).find(x => ((x.dataProvided || {}).entities || []).some(e => e.id === pm.collectionVariables.get(\"entidade\")));",
+									"pm.test(\"Registro da entidade da estufa\", () => pm.expect(r).to.exist);",
+									"pm.test(\"Os 4 comandos são atendidos pelo IoT Agent\", () => { pm.expect(r, \"registro não encontrado\").to.exist; pm.expect(r.provider.http.url).to.match(/iot-agent:4041/); pm.expect(r.dataProvided.attrs).to.include.members([\"setRelay\", \"setServo\", \"setInterval\", \"setSending\"]); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.4 [Verificação] A medida de teste chegou ao Orion",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								}
+							]
+						},
+						"description": "Antes de rodar esta verificação, publique **pelo HiveMQ WebSocket Client** uma medida de teste da estufa (tópico e JSON definidos por você, a partir da convenção do IoT Agent). Veja o passo 2.5 do guia."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda uma medida (de teste ou do firmware)",
+									"setTimeout(() => {}, 6000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"Pelo menos uma medida numérica\", () => pm.expect([\"temperature\", \"relativeHumidity\", \"soilMoisture\", \"illuminance\", \"relayState\", \"windowAngle\", \"samplingInterval\"].some(a => typeof e[a] === \"number\")).to.be.true);",
+									"pm.test(\"TimeInstant da medida\", () => pm.expect(e).to.have.property(\"TimeInstant\"));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Etapa 3 - Firmware e comandos",
+			"description": "Medidas da estufa e os 4 comandos, sempre **pelo Orion**.",
+			"item": [
+				{
+					"name": "3.1 [Pronto] A estufa está publicando",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=name,temperature,relativeHumidity,soilMoisture,illuminance,relayState,windowAngle,samplingInterval,TimeInstant",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "name,temperature,relativeHumidity,soilMoisture,illuminance,relayState,windowAngle,samplingInterval,TimeInstant"
+								}
+							]
+						},
+						"description": "**Requisição pronta.** Com o firmware rodando (ESP32 ou Wokwi), consulte a estufa no Orion em `keyValues` com `name`, os **7 atributos** de medida e o instante da última medida.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"[\"temperature\", \"relativeHumidity\", \"soilMoisture\", \"illuminance\", \"relayState\", \"windowAngle\", \"samplingInterval\"].forEach(a => pm.test(a + \" é número\", () => pm.expect(e[a], a + \" ausente ou como texto\").to.be.a(\"number\")));",
+									"pm.test(\"name da estufa\", () => pm.expect(e.name).to.be.a(\"string\"));",
+									"pm.test(\"Medida recente (menos de 15 s)\", () => pm.expect((Date.now() - Date.parse(e.TimeInstant)) / 1000).to.be.below(15));",
+									"pm.test(\"Faixas: relé 0/1, janela 0..180, intervalo 2..10\", () => { pm.expect([0, 1]).to.include(e.relayState); pm.expect(e.windowAngle).to.be.within(0, 180); pm.expect(e.samplingInterval).to.be.within(2, 10); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.2 [Pronto] Ligue o relé",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "**Requisição pronta.** Pelo **Orion**, ligue o relé da estufa.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setRelay\": {\n        \"type\": \"command\",\n        \"value\": 1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.3 [Pronto] O relé ligou?",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=setRelay_status,setRelay_info,relayState",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "setRelay_status,setRelay_info,relayState"
+								}
+							]
+						},
+						"description": "**Requisição pronta.** Consulte o **estado** e a **resposta** do comando `setRelay` e o atributo que mostra o relé.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando pelo broker público",
+									"setTimeout(() => {}, 4000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"setRelay_status OK (a estufa respondeu)\", () => pm.expect(e.setRelay_status).to.eql(\"OK\"));",
+									"pm.test(\"setRelay_info OK (a estufa executou)\", () => pm.expect(e.setRelay_info).to.eql(\"OK\"));",
+									"pm.test(\"relayState = 1\", () => pm.expect(e.relayState).to.eql(1));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.4 [Pronto] Abra a janela a 90°",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "**Requisição pronta.** Pelo **Orion**, posicione o servomotor da janela em 90°.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setServo\": {\n        \"type\": \"command\",\n        \"value\": 90\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.5 [Verificação] Janela a 90°",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=setServo_status,setServo_info,windowAngle",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "setServo_status,setServo_info,windowAngle"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando pelo broker público",
+									"setTimeout(() => {}, 4000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"setServo executado\", () => { pm.expect(e.setServo_status).to.eql(\"OK\"); pm.expect(e.setServo_info).to.eql(\"OK\"); });",
+									"pm.test(\"windowAngle = 90\", () => pm.expect(e.windowAngle).to.eql(90));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.6 [Pronto] Comando inválido: janela a 200°",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "**Requisição pronta.** Envie `setServo` = **200**.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setServo\": {\n        \"type\": \"command\",\n        \"value\": 200\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.7 [Pronto] A estufa recusou?",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=setServo_status,setServo_info,windowAngle",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "setServo_status,setServo_info,windowAngle"
+								}
+							]
+						},
+						"description": "**Requisição pronta.** Consulte o resultado do comando e o ângulo da janela. **Responda no relatório:** por que o `setServo_status` é `OK` se a estufa recusou o valor?\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando pelo broker público",
+									"setTimeout(() => {}, 4000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"setServo_info começa com ERRO\", () => pm.expect(String(e.setServo_info)).to.match(/^ERRO/));",
+									"pm.test(\"Janela preservada em 90°\", () => pm.expect(e.windowAngle).to.eql(90));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.8 [Pronto] Colete a cada 5 s",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "**Requisição pronta.** Pelo **Orion**, mude o intervalo de coleta para **5 s**.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setInterval\": {\n        \"type\": \"command\",\n        \"value\": 5\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.9 [Verificação] Intervalo de 5 s",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=setInterval_info,samplingInterval",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "setInterval_info,samplingInterval"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando pelo broker público",
+									"setTimeout(() => {}, 4000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"setInterval executado\", () => pm.expect(e.setInterval_info).to.eql(\"OK\"));",
+									"pm.test(\"samplingInterval = 5\", () => pm.expect(e.samplingInterval).to.eql(5));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.10 [Pronto] Intervalo inválido: 30 s",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "**Requisição pronta.** Envie `setInterval` = **30**.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setInterval\": {\n        \"type\": \"command\",\n        \"value\": 30\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.11 [Verificação] Intervalo preservado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=setInterval_info,samplingInterval",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "setInterval_info,samplingInterval"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando pelo broker público",
+									"setTimeout(() => {}, 4000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"setInterval recusado (ERRO)\", () => pm.expect(String(e.setInterval_info)).to.match(/^ERRO/));",
+									"pm.test(\"samplingInterval continua 5\", () => pm.expect(e.samplingInterval).to.eql(5));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.12 [Pronto] Desative o envio",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "**Requisição pronta.** Pelo **Orion**, desative o envio das medidas (o antigo `Desativar` do Projeto 1).\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setSending\": {\n        \"type\": \"command\",\n        \"value\": 0\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.13 [Verificação] Envio desativado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs/temperature",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs",
+								"temperature"
+							]
+						},
+						"description": "Lê o horário da última temperatura, espera 12 s (mais que o maior intervalo permitido) e lê de novo: o horário não pode mudar. Leva cerca de 16 s."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando pelo broker público",
+									"setTimeout(() => {}, 4000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const idade = a => { const t = (((a || {}).metadata || {}).TimeInstant || {}).value; return t ? (Date.now() - Date.parse(t)) / 1000 : 1e9; };",
+									"const antes = ((pm.response.json().metadata || {}).TimeInstant || {}).value;",
+									"pm.test(\"A temperatura tem o metadado TimeInstant\", () => pm.expect(antes).to.be.a(\"string\"));",
+									"setTimeout(() => pm.sendRequest({ url: pm.request.url.toString(), header: { \"fiware-service\": pm.collectionVariables.get(\"servico\"), \"fiware-servicepath\": pm.collectionVariables.get(\"caminho\") } }, (err, res) => {",
+									"  const depois = ((res.json().metadata || {}).TimeInstant || {}).value;",
+									"  pm.test(\"Nenhuma medida nova em 12 s\", () => pm.expect(depois).to.eql(antes));",
+									"}), 12000);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.14 [Pronto] Reative o envio",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "**Requisição pronta.** Pelo **Orion**, reative o envio das medidas.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setSending\": {\n        \"type\": \"command\",\n        \"value\": 1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.15 [Verificação] Envio reativado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs/temperature",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs",
+								"temperature"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda pelo menos uma medida no intervalo de 5 s",
+									"setTimeout(() => {}, 8000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const idade = a => { const t = (((a || {}).metadata || {}).TimeInstant || {}).value; return t ? (Date.now() - Date.parse(t)) / 1000 : 1e9; };",
+									"pm.test(\"Temperatura medida há menos de 8 s\", () => pm.expect(idade(pm.response.json())).to.be.below(8));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Etapa 4 - Subscrições, histórico e painel",
+			"description": "Alerta, Cygnus/MySQL e o painel do Grafana.",
+			"item": [
+				{
+					"name": "4.1 [Complete o corpo] Subscrição do histórico (Cygnus)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions"
+							]
+						},
+						"description": "Crie a subscrição que envia ao **Cygnus** o histórico da estufa: só entidades `Greenhouse` do seu caminho, apenas os **7 atributos de medida**, no formato que o Cygnus aceita. Lembre-se de **quem** envia a notificação.\n\n**Você escreve só o corpo** (aba *Body*, JSON). Método, URL e cabeçalhos já estão prontos: não os altere.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+									"const loc = pm.response.headers.get(\"Location\") || \"\";",
+									"pm.test(\"Location com o id da subscrição\", () => pm.expect(loc).to.include(\"/v2/subscriptions/\"));",
+									"if (loc) pm.collectionVariables.set(\"subHistorico\", loc.split(\"/\").pop());"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.2 [Verificação] Subscrição do histórico entregando",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions/{{subHistorico}}",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions",
+								"{{subHistorico}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda algumas notificações",
+									"setTimeout(() => {}, 8000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const s = pm.response.json();",
+									"pm.test(\"Só entidades Greenhouse\", () => pm.expect(s.subject.entities.every(e => e.type === \"Greenhouse\")).to.be.true);",
+									"pm.test(\"Os 7 atributos de medida (e só eles)\", () => pm.expect(s.notification.attrs).to.have.members([\"temperature\", \"relativeHumidity\", \"soilMoisture\", \"illuminance\", \"relayState\", \"windowAngle\", \"samplingInterval\"]));",
+									"pm.test(\"Formato aceito pelo Cygnus\", () => pm.expect(s.notification.attrsFormat).to.eql(\"normalized\"));",
+									"pm.test(\"Notificações entregues (lastSuccessCode 200)\", () => { pm.expect(s.notification.timesSent).to.be.above(0); pm.expect(s.notification.lastSuccessCode, s.notification.lastFailureReason).to.eql(200); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.3 [Verificação] O Cygnus está recebendo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{cygnus}}/v1/stats",
+							"protocol": "http",
+							"host": [
+								"{{cygnus}}"
+							],
+							"path": [
+								"v1",
+								"stats"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Eventos recebidos\", () => pm.expect(pm.response.json().stats.sources[0].num_received_events).to.be.above(0));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.4 [Complete o corpo] Notificação de solo seco (serviço externo)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions"
+							]
+						},
+						"description": "Crie a subscrição que notifica `http://consumidor:3000/alerta-estufa` quando a **umidade do solo** da estufa ficar **abaixo de 30 %**. A notificação deve ir em `keyValues`, só com a umidade do solo, o estado do relé e o horário da medida. Evite uma notificação a cada medida enquanto o solo estiver seco.\n\n**Você escreve só o corpo** (aba *Body*, JSON). Método, URL e cabeçalhos já estão prontos: não os altere.\n\n---\n**Critério de aceite:** os testes da aba *Test Results* devem passar.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+									"const loc = pm.response.headers.get(\"Location\") || \"\";",
+									"if (loc) pm.collectionVariables.set(\"subAlerta\", loc.split(\"/\").pop());"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.5 [Verificação] Subscrição de alerta",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions/{{subAlerta}}",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions",
+								"{{subAlerta}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const s = pm.response.json();",
+									"pm.test(\"Notifica o consumidor em /alerta-estufa\", () => pm.expect(s.notification.http.url).to.match(/consumidor:3000\\/alerta-estufa$/));",
+									"pm.test(\"Condição com expressão q sobre soilMoisture\", () => pm.expect(((s.subject.condition || {}).expression || {}).q || \"\").to.match(/soilMoisture\\s*<\\s*30/));",
+									"pm.test(\"keyValues\", () => pm.expect(s.notification.attrsFormat).to.eql(\"keyValues\"));",
+									"pm.test(\"Só soilMoisture, relayState e TimeInstant\", () => pm.expect(s.notification.attrs).to.have.members([\"soilMoisture\", \"relayState\", \"TimeInstant\"]));",
+									"pm.test(\"Limita a frequência das notificações\", () => pm.expect(s.throttling || 0, \"cada medida muda o TimeInstant e dispara a subscrição\").to.be.above(0));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.6 [Pronto] Limpa o consumidor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://{{consumidor}}/notificacoes",
+							"protocol": "http",
+							"host": [
+								"{{consumidor}}"
+							],
+							"path": [
+								"notificacoes"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.7 [Pronto] Simula uma medida de solo seco (HTTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotahttp}}/iot/json?k={{apikey}}&i={{device_id}}",
+							"protocol": "http",
+							"host": [
+								"{{iotahttp}}"
+							],
+							"path": [
+								"iot",
+								"json"
+							],
+							"query": [
+								{
+									"key": "k",
+									"value": "{{apikey}}"
+								},
+								{
+									"key": "i",
+									"value": "{{device_id}}"
+								}
+							]
+						},
+						"description": "Envia **uma** medida pela porta HTTP do IoT Agent (7896), sem passar pelo broker. A chave `soilMoisture` não é um `object_id`, então o IoT Agent a usa como nome do atributo. Na demonstração, prefira secar o sensor (ou mover o potenciômetro no Wokwi).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"soilMoisture\": 12\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Medida aceita\", () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.8 [Verificação] Alerta recebido",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{consumidor}}/notificacoes?caminho=/alerta-estufa",
+							"protocol": "http",
+							"host": [
+								"{{consumidor}}"
+							],
+							"path": [
+								"notificacoes"
+							],
+							"query": [
+								{
+									"key": "caminho",
+									"value": "/alerta-estufa"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a notificação",
+									"setTimeout(() => {}, 2000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const n = pm.response.json().filter(x => x.corpo && x.corpo.subscriptionId === pm.collectionVariables.get(\"subAlerta\"));",
+									"pm.test(\"Pelo menos uma notificação da subscrição de alerta\", () => pm.expect(n.length).to.be.above(0));",
+									"pm.test(\"Notificação com soilMoisture abaixo de 30\", () => pm.expect(n.some(x => x.corpo.data.some(d => d.soilMoisture < 30))).to.be.true);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.9 [Verificação] Fonte de dados MySQL",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{grafana}}/api/datasources",
+							"protocol": "http",
+							"host": [
+								"{{grafana}}"
+							],
+							"path": [
+								"api",
+								"datasources"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{grafana_usuario}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{grafana_senha}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const ds = pm.response.json().find(d => d.type === \"mysql\");",
+									"pm.test(\"Existe uma fonte de dados MySQL\", () => pm.expect(ds, \"crie a fonte de dados em Connections > Data sources\").to.exist);",
+									"if (ds) {",
+									"  pm.collectionVariables.set(\"dsUid\", ds.uid);",
+									"  pm.test(\"Host visto de dentro da rede Docker\", () => pm.expect(ds.url).to.eql(\"mysql-db:3306\"));",
+									"  pm.test(\"Banco fei\", () => pm.expect((ds.jsonData || {}).database || ds.database).to.eql(\"fei\"));",
+									"  pm.test(\"Usuário somente leitura (grafana)\", () => pm.expect(ds.user).to.eql(\"grafana\"));",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.10 [Verificação] Save & test",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{grafana}}/api/datasources/uid/{{dsUid}}/health",
+							"protocol": "http",
+							"host": [
+								"{{grafana}}"
+							],
+							"path": [
+								"api",
+								"datasources",
+								"uid",
+								"{{dsUid}}",
+								"health"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{grafana_usuario}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{grafana_senha}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Database Connection OK\", () => pm.expect(pm.response.json().status).to.eql(\"OK\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.11 [Verificação] Histórico da estufa no MySQL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{grafana}}/api/ds/query",
+							"protocol": "http",
+							"host": [
+								"{{grafana}}"
+							],
+							"path": [
+								"api",
+								"ds",
+								"query"
+							]
+						},
+						"description": "Consulta, pelo Grafana, as linhas gravadas pelo Cygnus na tabela `estufa` nos últimos 30 s.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"from\": \"now-15m\",\n    \"to\": \"now\",\n    \"queries\": [\n        {\n            \"refId\": \"A\",\n            \"datasource\": {\n                \"type\": \"mysql\",\n                \"uid\": \"{{dsUid}}\"\n            },\n            \"rawSql\": \"SELECT COUNT(DISTINCT attrName) AS atributos, GROUP_CONCAT(DISTINCT attrName ORDER BY attrName) AS nomes, COUNT(*) AS linhas FROM estufa WHERE recvTime >= UTC_TIMESTAMP() - INTERVAL 30 SECOND\",\n            \"format\": \"table\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{grafana_usuario}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{grafana_senha}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const r = pm.response.json().results.A;",
+									"pm.test(\"Consulta executada sem erro\", () => pm.expect(r.error, r.error).to.be.undefined);",
+									"const f = (r.frames || [])[0] || { schema: { fields: [] }, data: { values: [] } };",
+									"const col = n => f.data.values[f.schema.fields.map(x => x.name).indexOf(n)] || [];",
+									"pm.test(\"Linhas novas na tabela estufa\", () => pm.expect(col(\"linhas\")[0]).to.be.above(0));",
+									"pm.test(\"Somente os 7 atributos de medida\", () => pm.expect(col(\"atributos\")[0], \"gravando: \" + col(\"nomes\")[0] + \". Apague subscrições erradas ao Cygnus\").to.eql(7));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.12 [Verificação] Painel \"Estufa inteligente\" existe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{grafana}}/api/search?type=dash-db&query=Estufa%20inteligente",
+							"protocol": "http",
+							"host": [
+								"{{grafana}}"
+							],
+							"path": [
+								"api",
+								"search"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "dash-db"
+								},
+								{
+									"key": "query",
+									"value": "Estufa%20inteligente"
+								}
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{grafana_usuario}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{grafana_senha}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const p = pm.response.json().find(d => d.title.trim().toLowerCase() === \"estufa inteligente\");",
+									"pm.test(\"Painel salvo com o título Estufa inteligente\", () => pm.expect(p).to.exist);",
+									"if (p) pm.collectionVariables.set(\"painelUid\", p.uid);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "4.13 [Verificação] Conteúdo do painel",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{grafana}}/api/dashboards/uid/{{painelUid}}",
+							"protocol": "http",
+							"host": [
+								"{{grafana}}"
+							],
+							"path": [
+								"api",
+								"dashboards",
+								"uid",
+								"{{painelUid}}"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{grafana_usuario}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{grafana_senha}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const d = pm.response.json().dashboard;",
+									"const paineis = (d.panels || []).flatMap(p => p.type === \"row\" ? (p.panels || []) : [p]);",
+									"const sql = p => (p.targets || []).map(t => t.rawSql || \"\").join(\"\\n\");",
+									"const tem = (tipos, re) => paineis.some(p => tipos.includes(p.type) && re.test(sql(p)));",
+									"pm.test(\"Pelo menos 4 painéis\", () => pm.expect(paineis.length).to.be.at.least(4));",
+									"pm.test(\"a) Série temporal com temperatura e umidade do ar\", () => pm.expect(paineis.some(p => p.type === \"timeseries\" && /temperature/.test(sql(p)) && /relativeHumidity/.test(sql(p)))).to.be.true);",
+									"pm.test(\"b) Série temporal da umidade do solo\", () => pm.expect(tem([\"timeseries\"], /soilMoisture/)).to.be.true);",
+									"pm.test(\"c) Linha do tempo (state-timeline) do relé\", () => pm.expect(tem([\"state-timeline\"], /relayState/)).to.be.true);",
+									"pm.test(\"d) Stat ou Gauge com a luminosidade atual\", () => pm.expect(tem([\"stat\", \"gauge\"], /illuminance/)).to.be.true);",
+									"pm.test(\"Séries usam o intervalo do painel ($__timeFilter)\", () => pm.expect(paineis.filter(p => p.type === \"timeseries\").every(p => sql(p).includes(\"$__timeFilter\"))).to.be.true);",
+									"pm.test(\"Atualização automática ligada\", () => pm.expect(d.refresh).to.be.a(\"string\").and.not.empty);"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "orion",
+			"value": "localhost:1026",
+			"type": "string"
+		},
+		{
+			"key": "iotagent",
+			"value": "localhost:4041",
+			"type": "string"
+		},
+		{
+			"key": "iotahttp",
+			"value": "localhost:7896",
+			"type": "string"
+		},
+		{
+			"key": "consumidor",
+			"value": "localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "cygnus",
+			"value": "localhost:5080",
+			"type": "string"
+		},
+		{
+			"key": "grafana",
+			"value": "localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "grafana_usuario",
+			"value": "admin",
+			"type": "string"
+		},
+		{
+			"key": "grafana_senha",
+			"value": "admin",
+			"type": "string"
+		},
+		{
+			"key": "servico",
+			"value": "fei",
+			"type": "string"
+		},
+		{
+			"key": "caminho",
+			"value": "/estufa",
+			"type": "string"
+		},
+		{
+			"key": "apikey",
+			"value": "troqueesteid",
+			"type": "string"
+		},
+		{
+			"key": "device_id",
+			"value": "estufa001",
+			"type": "string"
+		},
+		{
+			"key": "entidade",
+			"value": "urn:ngsi-ld:Greenhouse:001",
+			"type": "string"
+		},
+		{
+			"key": "subHistorico",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "subAlerta",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "dsUid",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "painelUid",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

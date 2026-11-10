@@ -1,0 +1,1065 @@
+{
+	"info": {
+		"_postman_id": "9e2576a6-aa35-5b7f-a319-d1d968549660",
+		"name": "CCM520 - Projeto 2 - EXEMPLO RESOLVIDO - Lâmpada inteligente",
+		"description": "Exemplo resolvido do Projeto 2: uma **lâmpada inteligente simulada**, com todas as requisições prontas.\n\n1. A `lampada-simulada` sobe junto com o ambiente (`docker compose up -d` na pasta `plataforma`).\n2. Rode a coleção inteira no **Runner** (cerca de 30 s) e depois leia cada requisição: o **corpo**, a **descrição** e o que a resposta mostra.\n3. Compare com a estufa: cada descrição termina com **Na estufa**.\n\nA lâmpada usa o caminho `/lampada` e a API key `lampada2026`: ela **não interfere** na estufa. Ela fala com o Mosquitto **local**, sem a ponte. A pasta 0 recomeça o exemplo do zero.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0 - Recomeçar do zero",
+			"description": "Apaga subscrições, dispositivo, entidade e grupo do caminho `/lampada`.",
+			"item": [
+				{
+					"name": "0.1 Apaga as subscrições do caminho /lampada",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions"
+							]
+						},
+						"description": "Lista as subscrições do caminho e apaga todas."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const subs = pm.response.json();",
+									"subs.forEach(s => pm.sendRequest({ url: \"http://\" + pm.collectionVariables.get(\"orion\") + \"/v2/subscriptions/\" + s.id, method: \"DELETE\", header: { \"fiware-service\": pm.collectionVariables.get(\"servico\"), \"fiware-servicepath\": pm.collectionVariables.get(\"caminho\") } }, () => {}));",
+									"pm.test(\"Subscrições apagadas: \" + subs.length, () => pm.expect(subs).to.be.an(\"array\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "0.2 Apaga o dispositivo",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/devices/{{device_id}}",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"devices",
+								"{{device_id}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 (ou 404 se não existia)\", () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "0.3 Apaga a entidade",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 (ou 404 se não existia)\", () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "0.4 Apaga o grupo de serviço",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/groups?resource=/iot/json&apikey={{apikey}}",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"groups"
+							],
+							"query": [
+								{
+									"key": "resource",
+									"value": "/iot/json"
+								},
+								{
+									"key": "apikey",
+									"value": "{{apikey}}"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"204 (ou 404 se não existia)\", () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "1 - Provisionamento",
+			"description": "Grupo de serviço, dispositivo e o registro dos comandos.",
+			"item": [
+				{
+					"name": "1.1 Grupo de serviço da API key",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/groups",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"groups"
+							]
+						},
+						"description": "Cria o **grupo de serviço** da API key `{{apikey}}`.\n\n- `apikey`: identifica a lâmpada nos tópicos MQTT (variável da coleção);\n- `entity_type`: tipo das entidades criadas no Orion;\n- `resource`: `/iot/json`, o recurso padrão do IoT Agent JSON;\n- `cbroker`: o Orion **visto pelo IoT Agent**, de dentro da rede Docker (`orion:1026`, nunca `localhost`);\n- `autoprovision: false`: medidas de dispositivos que não foram provisionados são **rejeitadas**.\n\n---\n**Na estufa:** o mesmo corpo, com a API key do grupo e o tipo `Greenhouse` (requisição 2.1).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"groups\": [\n        {\n            \"apikey\": \"{{apikey}}\",\n            \"cbroker\": \"http://orion:1026\",\n            \"entity_type\": \"Lamp\",\n            \"resource\": \"/iot/json\",\n            \"autoprovision\": false\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"201 Created (ou 409 se já existia)\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.2 Dispositivo: a lâmpada",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotagent}}/iot/devices",
+							"protocol": "http",
+							"host": [
+								"{{iotagent}}"
+							],
+							"path": [
+								"iot",
+								"devices"
+							]
+						},
+						"description": "Provisiona a lâmpada `{{device_id}}` como a entidade `{{entidade}}`.\n\n- `attributes`: cada medida, com a **chave curta** que a lâmpada publica (`object_id`), o nome NGSI e o tipo;\n- `commands`: o que o Orion pode mandar para a lâmpada;\n- `static_attributes`: atributos fixos, que o dispositivo não publica.\n\nCompare os `object_id` (`s` e `l`) com o JSON que `plataforma/servicos/lampada_simulada.py` publica.\n\n---\n**Na estufa:** 7 atributos de medida, 4 comandos e 2 estáticos (`name` e `location`, do tipo `geo:json`); os `object_id` são os do seu firmware (requisição 2.2).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"devices\": [\n        {\n            \"device_id\": \"{{device_id}}\",\n            \"apikey\": \"{{apikey}}\",\n            \"entity_name\": \"{{entidade}}\",\n            \"entity_type\": \"Lamp\",\n            \"transport\": \"MQTT\",\n            \"timezone\": \"America/Sao_Paulo\",\n            \"attributes\": [\n                {\n                    \"object_id\": \"s\",\n                    \"name\": \"state\",\n                    \"type\": \"Number\"\n                },\n                {\n                    \"object_id\": \"l\",\n                    \"name\": \"luminosity\",\n                    \"type\": \"Number\"\n                }\n            ],\n            \"commands\": [\n                {\n                    \"name\": \"setLight\",\n                    \"type\": \"command\"\n                }\n            ],\n            \"static_attributes\": [\n                {\n                    \"name\": \"name\",\n                    \"type\": \"Text\",\n                    \"value\": \"Lampada da sala de estudos\"\n                }\n            ]\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"201 Created (ou 409 se já existia)\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.3 Quem atende os comandos?",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/registrations",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"registrations"
+							]
+						},
+						"description": "Ao provisionar um dispositivo com comandos, o IoT Agent **registra** no Orion: \"os comandos desta entidade são comigo\". Veja `provider.http.url` e `dataProvided.attrs`."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const r = pm.response.json().find(x => ((x.dataProvided || {}).entities || []).some(e => e.id === pm.collectionVariables.get(\"entidade\")));",
+									"pm.test(\"Registro do setLight apontando para o IoT Agent\", () => { pm.expect(r).to.exist; pm.expect(r.provider.http.url).to.match(/iot-agent:4041/); pm.expect(r.dataProvided.attrs).to.include(\"setLight\"); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "1.4 [Verificação] A lâmpada está publicando",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=name,state,luminosity,TimeInstant",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "name,state,luminosity,TimeInstant"
+								}
+							]
+						},
+						"description": "Requer a `lampada-simulada` no ar (`docker compose ps`). A primeira medida aceita completa a entidade."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda uma medida (a lâmpada publica a cada 5 s)",
+									"setTimeout(() => {}, 6000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"state e luminosity são números\", () => { pm.expect(e.state).to.be.a(\"number\"); pm.expect(e.luminosity).to.be.a(\"number\"); });",
+									"pm.test(\"name (estático) presente\", () => pm.expect(e.name).to.be.a(\"string\"));",
+									"pm.test(\"Medida recente (menos de 15 s)\", () => pm.expect((Date.now() - Date.parse(e.TimeInstant)) / 1000).to.be.below(15));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2 - Comandos",
+			"description": "Comando válido e inválido, sempre pelo Orion.",
+			"item": [
+				{
+					"name": "2.1 Acenda a lâmpada",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "Um comando é um `PATCH` no atributo do tipo `command`. O Orion repassa ao IoT Agent (pelo registro), que publica no tópico de comandos. Acompanhe com `docker compose logs -f lampada-simulada`.\n\n---\n**Na estufa:** `setRelay`, `setServo`, `setInterval` e `setSending` (requisições 3.2 a 3.14, prontas).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setLight\": {\n        \"type\": \"command\",\n        \"value\": 1\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.2 [Verificação] A lâmpada acendeu?",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=setLight_status,setLight_info,state",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "setLight_status,setLight_info,state"
+								}
+							]
+						},
+						"description": "`setLight_status`: a lâmpada respondeu? `setLight_info`: **o que** ela respondeu. `state`: a nova medida."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando (broker local)",
+									"setTimeout(() => {}, 2000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"setLight_status OK e setLight_info OK\", () => { pm.expect(e.setLight_status).to.eql(\"OK\"); pm.expect(e.setLight_info).to.eql(\"OK\"); });",
+									"pm.test(\"state = 1\", () => pm.expect(e.state).to.eql(1));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.3 Comando inválido: setLight = 5",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "A lâmpada recusa valores diferentes de 0 e 1.\n\n---\n**Na estufa:** valores fora da faixa também devem ser recusados.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setLight\": {\n        \"type\": \"command\",\n        \"value\": 5\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "2.4 [Verificação] A lâmpada recusou",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}?options=keyValues&attrs=setLight_status,setLight_info,state",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}"
+							],
+							"query": [
+								{
+									"key": "options",
+									"value": "keyValues"
+								},
+								{
+									"key": "attrs",
+									"value": "setLight_status,setLight_info,state"
+								}
+							]
+						},
+						"description": "Repare: `_status` é `OK` (a lâmpada **respondeu**), mas `_info` traz o `ERRO`, e o estado não mudou."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a ida e a volta do comando (broker local)",
+									"setTimeout(() => {}, 2000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const e = pm.response.json();",
+									"pm.test(\"setLight_status OK (respondeu)\", () => pm.expect(e.setLight_status).to.eql(\"OK\"));",
+									"pm.test(\"setLight_info com ERRO\", () => pm.expect(String(e.setLight_info)).to.match(/^ERRO/));",
+									"pm.test(\"state continua 1\", () => pm.expect(e.state).to.eql(1));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "3 - Subscrições",
+			"description": "Histórico no Cygnus e notificação para o serviço externo (consumidor).",
+			"item": [
+				{
+					"name": "3.1 Subscrição do histórico (Cygnus)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions"
+							]
+						},
+						"description": "O Orion avisa o **Cygnus** a cada mudança das medidas, e o Cygnus grava no MySQL (Aula 9).\n\n- `subject.entities`: todas as entidades do tipo `Lamp` deste caminho;\n- `notification.attrs`: **só** as medidas (sem comandos nem estáticos);\n- `http.url`: o Cygnus **visto pelo Orion**, que é quem envia (`cygnus:5050/notify`);\n- `attrsFormat: normalized`: o único formato que o Cygnus aceita.\n\nO caminho `/lampada` vira a tabela `lampada` no banco `fei`.\n\n---\n**Na estufa:** entidades `Greenhouse` e os 7 atributos de medida (requisição 4.1).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Historico da lampada para o Cygnus\",\n    \"subject\": {\n        \"entities\": [\n            {\n                \"idPattern\": \".*\",\n                \"type\": \"Lamp\"\n            }\n        ]\n    },\n    \"notification\": {\n        \"http\": {\n            \"url\": \"http://cygnus:5050/notify\"\n        },\n        \"attrs\": [\n            \"state\",\n            \"luminosity\"\n        ],\n        \"attrsFormat\": \"normalized\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+									"const loc = pm.response.headers.get(\"Location\") || \"\";",
+									"if (loc) pm.collectionVariables.set(\"subHistorico\", loc.split(\"/\").pop());"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.2 [Verificação] Histórico entregue ao Cygnus",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions/{{subHistorico}}",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions",
+								"{{subHistorico}}"
+							]
+						},
+						"description": "`timesSent` conta as notificações; `lastSuccessCode` 200 indica que o Cygnus aceitou."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda algumas medidas",
+									"setTimeout(() => {}, 7000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const n = pm.response.json().notification;",
+									"pm.test(\"Notificações entregues (lastSuccessCode 200)\", () => { pm.expect(n.timesSent).to.be.above(0); pm.expect(n.lastSuccessCode, n.lastFailureReason).to.eql(200); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.3 Notificação para o serviço externo: lâmpada acesa com ambiente claro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/subscriptions",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"subscriptions"
+							]
+						},
+						"description": "Avisa o **consumidor** (o serviço externo) quando a lâmpada está acesa e o ambiente já está claro: desperdício.\n\n- `condition.expression.q`: a condição sobre o **novo** estado (`;` significa \"e\");\n- `condition.attrs`: quais atributos, ao mudar, fazem o Orion avaliar a condição;\n- `notification.attrs` e `keyValues`: só o necessário, sem tipos nem metadados;\n- `throttling`: no máximo uma notificação a cada 10 s. Sem ele, cada medida (a cada 5 s) geraria um alerta, porque o `TimeInstant` muda sempre.\n\nAcompanhe em `http://localhost:3001/notificacoes?caminho=/alerta-lampada`.\n\n---\n**Na estufa:** `soilMoisture` abaixo de 30 %, destino `/alerta-estufa` (requisição 4.4).",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Lampada acesa em ambiente claro\",\n    \"subject\": {\n        \"entities\": [\n            {\n                \"id\": \"{{entidade}}\",\n                \"type\": \"Lamp\"\n            }\n        ],\n        \"condition\": {\n            \"attrs\": [\n                \"state\",\n                \"luminosity\"\n            ],\n            \"expression\": {\n                \"q\": \"state==1;luminosity>70\"\n            }\n        }\n    },\n    \"notification\": {\n        \"http\": {\n            \"url\": \"http://consumidor:3000/alerta-lampada\"\n        },\n        \"attrs\": [\n            \"state\",\n            \"luminosity\",\n            \"TimeInstant\"\n        ],\n        \"attrsFormat\": \"keyValues\"\n    },\n    \"throttling\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+									"const loc = pm.response.headers.get(\"Location\") || \"\";",
+									"if (loc) pm.collectionVariables.set(\"subAlerta\", loc.split(\"/\").pop());"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.4 [Pronto] Limpa o consumidor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://{{consumidor}}/notificacoes",
+							"protocol": "http",
+							"host": [
+								"{{consumidor}}"
+							],
+							"path": [
+								"notificacoes"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.5 [Pronto] Simula ambiente claro (medida pela porta HTTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{iotahttp}}/iot/json?k={{apikey}}&i={{device_id}}",
+							"protocol": "http",
+							"host": [
+								"{{iotahttp}}"
+							],
+							"path": [
+								"iot",
+								"json"
+							],
+							"query": [
+								{
+									"key": "k",
+									"value": "{{apikey}}"
+								},
+								{
+									"key": "i",
+									"value": "{{device_id}}"
+								}
+							]
+						},
+						"description": "Envia **uma** medida pela porta HTTP do IoT Agent (7896), como se a lâmpada tivesse medido 95 % de luz. Com a lâmpada acesa (2.1), a condição da 3.3 fica verdadeira.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"l\": 95\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Medida aceita\", () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.6 [Verificação] O consumidor recebeu o alerta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://{{consumidor}}/notificacoes?caminho=/alerta-lampada",
+							"protocol": "http",
+							"host": [
+								"{{consumidor}}"
+							],
+							"path": [
+								"notificacoes"
+							],
+							"query": [
+								{
+									"key": "caminho",
+									"value": "/alerta-lampada"
+								}
+							]
+						},
+						"description": "A notificação chega em `keyValues`: `data` traz só os atributos pedidos. A verificação espera 12 s: com o `throttling` de 10 s, o próximo alerta pode demorar até isso."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// aguarda a notificação (throttling de 10 s)",
+									"setTimeout(() => {}, 12000);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+									"const n = pm.response.json().filter(x => x.corpo && x.corpo.subscriptionId === pm.collectionVariables.get(\"subAlerta\"));",
+									"pm.test(\"Alerta recebido\", () => pm.expect(n.length).to.be.above(0));",
+									"pm.test(\"Lâmpada acesa e luz acima de 70 %\", () => pm.expect(n.some(x => x.corpo.data.some(d => d.state === 1 && d.luminosity > 70))).to.be.true);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "3.7 Apague a lâmpada",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "fiware-service",
+								"value": "{{servico}}"
+							},
+							{
+								"key": "fiware-servicepath",
+								"value": "{{caminho}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "http://{{orion}}/v2/entities/{{entidade}}/attrs",
+							"protocol": "http",
+							"host": [
+								"{{orion}}"
+							],
+							"path": [
+								"v2",
+								"entities",
+								"{{entidade}}",
+								"attrs"
+							]
+						},
+						"description": "Fecha o exemplo com a lâmpada apagada.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"setLight\": {\n        \"type\": \"command\",\n        \"value\": 0\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "orion",
+			"value": "localhost:1026",
+			"type": "string"
+		},
+		{
+			"key": "iotagent",
+			"value": "localhost:4041",
+			"type": "string"
+		},
+		{
+			"key": "iotahttp",
+			"value": "localhost:7896",
+			"type": "string"
+		},
+		{
+			"key": "consumidor",
+			"value": "localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "servico",
+			"value": "fei",
+			"type": "string"
+		},
+		{
+			"key": "caminho",
+			"value": "/lampada",
+			"type": "string"
+		},
+		{
+			"key": "apikey",
+			"value": "lampada2026",
+			"type": "string"
+		},
+		{
+			"key": "device_id",
+			"value": "lampada001",
+			"type": "string"
+		},
+		{
+			"key": "entidade",
+			"value": "urn:ngsi-ld:Lamp:001",
+			"type": "string"
+		},
+		{
+			"key": "subHistorico",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "subAlerta",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
