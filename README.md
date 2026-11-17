@@ -1,113 +1,216 @@
-# Estufa inteligente na plataforma FIWARE — Grupo `<apikey>`
+# Projeto 2 - Estufa inteligente na plataforma FIWARE
 
-> Modelo de documentação do repositório do Projeto 2 (CCM520 – Internet das Coisas). Substitua tudo o que está entre `< >` e apague as instruções em itálico. O objetivo é que **outra pessoa consiga reproduzir o projeto** só com este README.
+CCM520 - Internet das Coisas | Centro Universitário FEI
 
-**Integrantes:** `Guilherme Silva Xavier (24.224.025-7)`, `Enrico Nascimento Silva (RA)`
-**Link do Wokwi (se usar):** `<link>`
-**Vídeo da demonstração (opcional):** `<link>`
+> Rascunho. Os trechos marcados com `TODO` são do grupo (decisões, análises, valores medidos) e precisam ser escritos por vocês. Compare também com o `Modelo de README do grupo.md` do Moodle e ajuste a estrutura se for diferente.
 
-## 1. Descrição
+## 1. Identificação
 
-_Em um parágrafo: o que a estufa monitora, o que ela aciona e como a plataforma FIWARE entra no sistema._
+| Campo | Valor |
+|---|---|
+| Integrantes | TODO: nomes e RAs |
+| API key do grupo | `0257` |
+| Dispositivo | `estufa001` |
+| Entidade NGSI | `urn:ngsi-ld:Greenhouse:001` (tipo `Greenhouse`) |
+| Serviço / caminho | `fei` / `/estufa` |
+| Repositório | TODO: link do GitHub |
 
-## 2. Arquitetura
+## 2. Objetivo
 
-_Um diagrama (imagem ou ASCII) com a ESP32, o broker público, o IoT Agent, o Orion, o Cygnus/MySQL, o Grafana e o consumidor. Indique protocolo e porta em cada ligação._
+TODO: descrever com as palavras do grupo o objetivo do projeto (estufa gerenciada por contexto: ESP32, IoT Agent JSON, Orion, Cygnus, MySQL e Grafana).
 
-## 3. Hardware
+## 3. Arquitetura
 
-| Componente | Pino da ESP32 | Observação |
-| --- | --- | --- |
-| DHT22 | `<GPIO>` | |
-| Umidade do solo | `<GPIO>` | |
-| LDR | `<GPIO>` | |
-| Relé | `<GPIO>` | |
-| Servomotor | `<GPIO>` | |
+Caminho das medidas (norte):
 
-**Calibração:** _como vocês converteram as leituras do ADC em % de umidade do solo e de luminosidade (valores de referência medidos)._
+```
+ESP32 / Wokwi -> broker.hivemq.com -> ponte -> Mosquitto local -> IoT Agent JSON -> Orion -> subscrições (Cygnus e alerta)
+```
 
-## 4. Identificadores
+Caminho dos comandos (sul):
 
-| Item | Valor |
-| --- | --- |
-| API key | `<...>` |
-| Client id da ponte | `<...>` |
-| `fiware-service` / `fiware-servicepath` | `fei` / `/estufa` |
-| `device_id` | `estufa001` |
-| Entidade | `urn:ngsi-ld:Greenhouse:001` (`Greenhouse`) |
-| Client id MQTT da ESP32 | `<...>` |
+```
+Orion -> IoT Agent JSON -> Mosquitto local -> ponte -> broker.hivemq.com -> ESP32 / Wokwi
+```
 
-## 5. Modelo de dados
+Histórico e visualização: `Orion -> Cygnus -> MySQL -> Grafana`.
 
-### 5.1 Medidas
+Serviços do `docker-compose.yml`: Orion (+ MongoDB), IoT Agent JSON, Mosquitto, consumidor, Cygnus, MySQL e Grafana.
 
-| `object_id` (firmware) | Atributo NGSI | Tipo | Unidade / faixa |
-| --- | --- | --- | --- |
-| `<...>` | `temperature` | Number | °C |
-| `<...>` | `relativeHumidity` | Number | % |
-| `<...>` | `soilMoisture` | Number | % |
-| `<...>` | `illuminance` | Number | % |
-| `<...>` | `relayState` | Number | 0/1 |
-| `<...>` | `windowAngle` | Number | 0–180 |
-| `<...>` | `samplingInterval` | Number | s |
+| Serviço | Porta (host) | Uso |
+|---|---|---|
+| Orion | 1026 | API NGSI-v2 |
+| IoT Agent JSON | 4041 | provisionamento (grupos e dispositivos) |
+| Mosquitto | 1883 | broker local, lado da ponte |
+| Cygnus | 5050 / 5080 | notificações do Orion / API de gestão |
+| Grafana | 3000 | painel |
+| Consumidor | 3001 | alertas (acessado pelo Orion como `consumidor:3000`) |
+| MySQL | 3306 | banco `fei`, tabela `estufa` |
 
-Exemplo de payload publicado: `<...>`
+TODO: conferir as portas no seu `docker-compose.yml` e incluir o diagrama da arquitetura, se quiserem.
 
-### 5.2 Comandos
+## 4. Como subir o ambiente
 
-| Comando | Valores aceitos | Resposta de sucesso | Respostas de erro |
-| --- | --- | --- | --- |
-| `setRelay` | `<...>` | `OK` | `<...>` |
-| `setServo` | `<...>` | `OK` | `<...>` |
-| `setInterval` | `<...>` | `OK` | `<...>` |
-| `setSending` | `<...>` | `OK` | `<...>` |
+1. Instale Docker Desktop e Postman.
+2. Na pasta `plataforma/`:
 
-### 5.3 Tópicos MQTT
+```bash
+docker compose up -d
+docker compose ps
+```
+
+3. Confira que todos os serviços estão `running` e o MySQL, `healthy`.
+4. Para encerrar sem perder dados: `docker compose stop`. Evite `docker compose down -v`, que apaga os volumes.
+
+## 5. Ponte MQTT (Mosquitto <-> HiveMQ)
+
+A ponte só deixa passar os tópicos da API key do grupo:
+
+| Tópico | Direção | Quem publica |
+|---|---|---|
+| `/json/0257/estufa001/attrs` | in (HiveMQ -> local) | ESP32 |
+| `/json/0257/estufa001/cmdexe` | in (HiveMQ -> local) | ESP32 |
+| `/0257/estufa001/cmd` | out (local -> HiveMQ) | IoT Agent |
+
+TODO: indicar o `remote_clientid` usado na ponte e explicar por que ele inclui a API key.
+
+## 6. Modelo de dados
+
+### 6.1 Atributos de medida (contrato entre firmware e provisionamento)
+
+| Grandeza | Atributo NGSI | `object_id` | Tipo | Faixa |
+|---|---|---|---|---|
+| Temperatura do ar | `temperature` | `t` | Number | °C |
+| Umidade relativa do ar | `relativeHumidity` | `rH` | Number | % |
+| Umidade do solo | `soilMoisture` | `sM` | Number | 0 seco, 100 encharcado |
+| Luminosidade | `illuminance` | `ilm` | Number | 0 escuro, 100 claro |
+| Estado do relé | `relayState` | `rS` | Number | 0 ou 1 |
+| Ângulo da janela | `windowAngle` | `wA` | Number | 0 a 180 |
+| Intervalo de coleta | `samplingInterval` | `sI` | Number | 2 a 10 s |
+
+### 6.2 Comandos
+
+| Comando | Valor | Efeito |
+|---|---|---|
+| `setRelay` | 0 ou 1 | desliga / liga o relé |
+| `setServo` | 0 a 180 | posiciona a janela |
+| `setInterval` | 2 a 10 | intervalo de coleta (s) |
+| `setSending` | 0 ou 1 | desativa / ativa o envio das medidas |
+
+A estufa responde todo comando com `OK` ou `ERRO: <motivo>`. Valor inválido nunca altera o estado. Com `setSending = 0` as medidas param, mas os comandos continuam funcionando.
+
+### 6.3 Atributos estáticos
+
+| Atributo | Tipo | Valor |
+|---|---|---|
+| `name` | Text | `Estufado` |
+| `location` | geo:json | Point, coordenadas `[-46.63, -23.55]` (longitude, latitude) |
+
+## 7. Provisionamento (IoT Agent)
+
+- **Grupo de serviço** (`POST /iot/groups`, lista `groups`): `apikey` `0257`, `entity_type` `Greenhouse`, `resource` `/iot/json`, `cbroker` `http://orion:1026`, `autoprovision` `false`.
+- **Dispositivo** (`POST /iot/devices`, lista `devices`): `device_id` `estufa001`, transporte MQTT, 7 atributos, 4 comandos e 2 estáticos conforme a seção 6.
+- Cabeçalhos em todas as requisições ao IoT Agent e ao Orion: `fiware-service: fei` e `fiware-servicepath: /estufa`.
+
+TODO: explicar com as palavras do grupo por que `autoprovision` está desligado e o que foi observado ao receber medidas de dispositivos não provisionados (`MEASURES-004`).
+
+## 8. Firmware e circuito (Wokwi)
+
+Arquivo: `firmware/main.py` (MicroPython, ESP32). Wi-Fi do Wokwi: `Wokwi-GUEST`, sem senha. Client id MQTT: `esp32_0257_estufa001`.
+
+| Componente | Pino | Observação |
+|---|---|---|
+| Umidade do solo | GPIO34 (ADC1) | no Wokwi, simulada por potenciômetro |
+| Luminosidade (LDR) | GPIO35 (ADC1) | módulo com saída analógica |
+| DHT22 | GPIO4 | temperatura e umidade do ar |
+| Relé | GPIO26 | saída digital |
+| Servo | GPIO27 | PWM a 50 Hz |
+
+Tópicos usados pelo firmware:
 
 | Sentido | Tópico |
-| --- | --- |
-| Medidas | `<...>` |
-| Comandos | `<...>` |
-| Resultado | `<...>` |
+|---|---|
+| Medidas (publica) | `/json/0257/estufa001/attrs` |
+| Comandos (assina) | `/0257/estufa001/cmd` |
+| Resultado (publica) | `/json/0257/estufa001/cmdexe` |
 
-### 5.4 Ponte com o broker público
+### Calibração
 
-| Padrão | Direção | Por quê |
-| --- | --- | --- |
-| `<...>` | `in` | `<...>` |
-| `<...>` | `out` | `<...>` |
+| Constante | Valor | Critério |
+|---|---|---|
+| `SOIL_DRY_RAW` | 0 | TODO: confirmar o valor medido e o critério |
+| `SOIL_WET_RAW` | 4095 | TODO: confirmar o valor medido e o critério |
+| `LIGHT_DARK_RAW` | TODO | TODO: medir no módulo LDR |
+| `LIGHT_BRIGHT_RAW` | TODO | TODO: medir no módulo LDR |
+| Servo (`duty` em 0° e 180°) | TODO | TODO: medir no Wokwi |
 
-## 6. Como reproduzir
+TODO: registrar como a calibração foi feita e anexar o diagrama do circuito.
 
-_Passo a passo numerado, do `git clone` até o painel funcionando: `mosquitto.conf` (ponte), `docker compose up -d`, teste da ponte, importação da coleção, ordem das requisições, gravação do firmware, criação da fonte de dados e do painel. Informe o que o leitor deve ver ao final de cada passo._
+## 9. Subscrições
 
-## 7. Subscrições
+| Subscrição | Condição | Destino | Atributos | Formato |
+|---|---|---|---|---|
+| Histórico | entidades `Greenhouse` | `http://cygnus:5050/notify` | os 7 atributos de medida | `normalized` |
+| Alerta de solo seco | `soilMoisture<30` | `http://consumidor:3000/alerta-estufa` | `soilMoisture`, `relayState`, `TimeInstant` | `keyValues` |
 
-| Subscrição | Condição | Destino | Atributos e formato | Por que assim |
-| --- | --- | --- | --- | --- |
-| Histórico | `<...>` | `<...>` | `<...>` | `<...>` |
-| Alerta de solo seco | `<...>` | `<...>` | `<...>` | `<...>` |
+A subscrição de alerta usa `throttling` de 60 s, para não notificar a cada medida enquanto o solo estiver seco.
 
-## 8. Painel
+TODO: justificar a escolha do `throttling`.
 
-_Captura de tela do painel "Estufa inteligente" e uma linha sobre cada visualização (consulta usada e o que ela mostra). O JSON exportado está em `plataforma/painel-estufa.json`._
+## 10. Painel no Grafana
 
-## 9. Testes
+Dashboard **Estufa inteligente** (atualização automática de 5 s), fonte MySQL com o usuário somente leitura `grafana`, banco `fei`:
 
-_Captura do Runner do Postman com a coleção inteira passando (pasta 99 antes) e o arquivo de resultados exportado em `postman/`._
+| Item | Painel | Atributo(s) |
+|---|---|---|
+| a | Série temporal | `temperature` e `relativeHumidity` |
+| b | Série temporal | `soilMoisture` |
+| c | State timeline | `relayState` |
+| d | Stat ou Gauge | `illuminance` (valor atual) |
 
-## 10. Decisões de projeto e limitações
+O Cygnus grava todas as colunas como texto, então as consultas usam `CAST` no `SELECT`, e nunca dentro das macros `$__timeFilter`. Exportação: `grafana/painel-estufa.json`.
 
-_O que vocês escolheram e por quê (calibração, validação dos comandos, tratamento de falhas), o que não funciona bem e o que fariam diferente em um sistema real (pense no broker público)._
+## 11. Testes e demonstração
 
-## 11. Desafios realizados
+Roteiro do ciclo completo:
 
-_Quais desafios (D.1 a D.4) foram feitos e onde estão no repositório._
+1. `setRelay = 1` enviado pelo Orion (`PATCH /v2/entities/urn:ngsi-ld:Greenhouse:001/attrs`).
+2. A estufa responde e o Orion mostra `setRelay_status` e `setRelay_info`.
+3. A nova medida traz `relayState = 1`.
+4. O Cygnus grava no MySQL.
+5. O Grafana mostra o relé ligado.
 
-## 12. Uso de ferramentas de IA
+Coleção Postman: rodar as pastas no Runner com a estufa ligada. Use um **delay de 3000 a 5000 ms** entre requisições. Sem ele, algumas verificações falham porque consultam o Orion antes de a resposta da ESP32 voltar pelo broker público.
 
-_Declare, conforme as regras de integridade acadêmica da disciplina, em que partes usaram modelos de linguagem e para quê (por exemplo: explicação de um erro, revisão do texto)._
+TODO: anexar o resultado exportado do Runner e capturas de tela do painel.
 
-## 13. Referências
+## 12. Segurança e limitações
 
-_Material das aulas, documentação do FIWARE e da HiveMQ, e qualquer outra fonte consultada._
+TODO: discutir, com as palavras do grupo, os riscos de usar um broker público (ausência de autenticação, colisão de client id, assinatura compartilhada) e o que foi feito para mitigá-los (API key única, IoT Agent no Mosquitto local, ponte filtrada).
+
+## 13. Decisões de projeto
+
+TODO: registrar as decisões do grupo (escolha dos `object_id`, valores de `throttling`, formatos de subscrição, simulação do sensor de solo por potenciômetro, etc.) e as dificuldades encontradas.
+
+## 14. Estrutura do repositório
+
+```
+projeto2-<Nome>-0257/
+├── README.md
+├── firmware/main.py
+├── plataforma/
+│   ├── docker-compose.yml
+│   └── mosquitto/ mysql/ servicos/
+├── postman/
+├── grafana/painel-estufa.json
+└── relatorio.pdf
+```
+
+Não suba a senha real do Wi-Fi para o repositório.
+
+## 15. Referências
+
+- Material das Aulas 5 a 9 e documentos de apoio do Moodle
+- fiware-iotagent-json.readthedocs.io
+- fiware-orion.readthedocs.io
+- hivemq.com/mqtt
