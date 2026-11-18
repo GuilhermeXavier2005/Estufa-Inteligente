@@ -1,0 +1,593 @@
+{
+	"id": "38bb9123-3879-4cc5-bcad-1b90ced379c6",
+	"name": "CCM520 - Projeto 2 - Estufa na plataforma FIWARE (template) Copy",
+	"timestamp": "2026-11-17T16:37:30.892Z",
+	"collection_id": "58770408-21225616-6d77-43c7-9d80-3bf167429f2e",
+	"folder_id": "58770408-5ab5ea18-59cd-49de-bb82-6d06a3765844",
+	"environment_id": "0",
+	"totalPass": 41,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-11-17T16:37:18.615Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "274f4034-9292-408c-8d36-e2ae8cda6d1d",
+			"name": "4.1 [Complete o corpo] Subscrição do histórico (Cygnus)",
+			"url": "http://localhost:1026/v2/subscriptions",
+			"time": 13,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"Status 201": true,
+				"Location com o id da subscrição": true
+			},
+			"testPassFailCounts": {
+				"Status 201": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Location com o id da subscrição": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"Status 201": true,
+					"Location com o id da subscrição": true
+				}
+			]
+		},
+		{
+			"id": "e2e318a3-8fd7-429c-9bad-9c78547f6c6b",
+			"name": "4.2 [Verificação] Subscrição do histórico entregando",
+			"url": "http://localhost:1026/v2/subscriptions/6afc82bf39a96baa220903d8",
+			"time": 13,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Só entidades Greenhouse": true,
+				"Os 7 atributos de medida (e só eles)": true,
+				"Formato aceito pelo Cygnus": true,
+				"Notificações entregues (lastSuccessCode 200)": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Só entidades Greenhouse": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Os 7 atributos de medida (e só eles)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Formato aceito pelo Cygnus": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Notificações entregues (lastSuccessCode 200)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Só entidades Greenhouse": true,
+					"Os 7 atributos de medida (e só eles)": true,
+					"Formato aceito pelo Cygnus": true,
+					"Notificações entregues (lastSuccessCode 200)": true
+				}
+			]
+		},
+		{
+			"id": "362b3577-0430-45a4-b043-7a4fe05acb05",
+			"name": "4.3 [Verificação] O Cygnus está recebendo",
+			"url": "http://localhost:5080/v1/stats",
+			"time": 13,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Eventos recebidos": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Eventos recebidos": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Eventos recebidos": true
+				}
+			]
+		},
+		{
+			"id": "c768823d-ceef-4f94-b2df-8112307eade4",
+			"name": "4.4 [Complete o corpo] Notificação de solo seco (serviço externo)",
+			"url": "http://localhost:1026/v2/subscriptions",
+			"time": 12,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"Status 201": true
+			},
+			"testPassFailCounts": {
+				"Status 201": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				12
+			],
+			"allTests": [
+				{
+					"Status 201": true
+				}
+			]
+		},
+		{
+			"id": "d80c8931-fe1e-4804-9174-1070a8486eb0",
+			"name": "4.5 [Verificação] Subscrição de alerta",
+			"url": "http://localhost:1026/v2/subscriptions/6afc82c739a96baa220903d9",
+			"time": 12,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Notifica o consumidor em /alerta-estufa": true,
+				"Condição com expressão q sobre soilMoisture": true,
+				"keyValues": true,
+				"Só soilMoisture, relayState e TimeInstant": true,
+				"Limita a frequência das notificações": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Notifica o consumidor em /alerta-estufa": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Condição com expressão q sobre soilMoisture": {
+					"pass": 1,
+					"fail": 0
+				},
+				"keyValues": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Só soilMoisture, relayState e TimeInstant": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Limita a frequência das notificações": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				12
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Notifica o consumidor em /alerta-estufa": true,
+					"Condição com expressão q sobre soilMoisture": true,
+					"keyValues": true,
+					"Só soilMoisture, relayState e TimeInstant": true,
+					"Limita a frequência das notificações": true
+				}
+			]
+		},
+		{
+			"id": "7033503e-2937-4e7c-911a-1d4180f61c7f",
+			"name": "4.6 [Pronto] Limpa o consumidor",
+			"url": "http://localhost:3001/notificacoes",
+			"time": 14,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"Status 204": true
+			},
+			"testPassFailCounts": {
+				"Status 204": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				14
+			],
+			"allTests": [
+				{
+					"Status 204": true
+				}
+			]
+		},
+		{
+			"id": "5669e520-d439-4d33-b0c6-18fe08a9ce45",
+			"name": "4.7 [Pronto] Simula uma medida de solo seco (HTTP)",
+			"url": "http://localhost:7896/iot/json?k=0257&i=estufa001",
+			"time": 67,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Medida aceita": true
+			},
+			"testPassFailCounts": {
+				"Medida aceita": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				67
+			],
+			"allTests": [
+				{
+					"Medida aceita": true
+				}
+			]
+		},
+		{
+			"id": "aa67125c-eb56-40e5-8fe7-bdf3fb2d3172",
+			"name": "4.8 [Verificação] Alerta recebido",
+			"url": "http://localhost:3001/notificacoes?caminho=/alerta-estufa",
+			"time": 16,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Pelo menos uma notificação da subscrição de alerta": true,
+				"Notificação com soilMoisture abaixo de 30": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Pelo menos uma notificação da subscrição de alerta": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Notificação com soilMoisture abaixo de 30": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				16
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Pelo menos uma notificação da subscrição de alerta": true,
+					"Notificação com soilMoisture abaixo de 30": true
+				}
+			]
+		},
+		{
+			"id": "6d28efd3-a1e2-404a-8426-1406672eb987",
+			"name": "4.9 [Verificação] Fonte de dados MySQL",
+			"url": "http://localhost:3000/api/datasources",
+			"time": 24,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Existe uma fonte de dados MySQL": true,
+				"Host visto de dentro da rede Docker": true,
+				"Banco fei": true,
+				"Usuário somente leitura (grafana)": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Existe uma fonte de dados MySQL": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Host visto de dentro da rede Docker": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Banco fei": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Usuário somente leitura (grafana)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				24
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Existe uma fonte de dados MySQL": true,
+					"Host visto de dentro da rede Docker": true,
+					"Banco fei": true,
+					"Usuário somente leitura (grafana)": true
+				}
+			]
+		},
+		{
+			"id": "b52c2733-abb6-47ff-bb63-a0ebfffc08fd",
+			"name": "4.10 [Verificação] Save & test",
+			"url": "http://localhost:3000/api/datasources/uid/ag4g17vdvhw5ca/health",
+			"time": 20,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Database Connection OK": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Database Connection OK": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				20
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Database Connection OK": true
+				}
+			]
+		},
+		{
+			"id": "8001d7be-a799-402d-b5bf-d6a367926c67",
+			"name": "4.11 [Verificação] Histórico da estufa no MySQL",
+			"url": "http://localhost:3000/api/ds/query",
+			"time": 46,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Consulta executada sem erro": true,
+				"Linhas novas na tabela estufa": true,
+				"Somente os 7 atributos de medida": true
+			},
+			"testPassFailCounts": {
+				"Consulta executada sem erro": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Linhas novas na tabela estufa": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Somente os 7 atributos de medida": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				46
+			],
+			"allTests": [
+				{
+					"Consulta executada sem erro": true,
+					"Linhas novas na tabela estufa": true,
+					"Somente os 7 atributos de medida": true
+				}
+			]
+		},
+		{
+			"id": "86fe21ed-e475-47ed-84b3-0623c11ecc97",
+			"name": "4.12 [Verificação] Painel \"Estufa inteligente\" existe",
+			"url": "http://localhost:3000/api/search?type=dash-db&query=Estufa%20inteligente",
+			"time": 39,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Painel salvo com o título Estufa inteligente": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Painel salvo com o título Estufa inteligente": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				39
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Painel salvo com o título Estufa inteligente": true
+				}
+			]
+		},
+		{
+			"id": "dbee0677-dec2-4edb-b193-82c6b1e05f37",
+			"name": "4.13 [Verificação] Conteúdo do painel",
+			"url": "http://localhost:3000/api/dashboards/uid/adwchf9",
+			"time": 41,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Pelo menos 4 painéis": true,
+				"a) Série temporal com temperatura e umidade do ar": true,
+				"b) Série temporal da umidade do solo": true,
+				"c) Linha do tempo (state-timeline) do relé": true,
+				"d) Stat ou Gauge com a luminosidade atual": true,
+				"Séries usam o intervalo do painel ($__timeFilter)": true,
+				"Atualização automática ligada": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Pelo menos 4 painéis": {
+					"pass": 1,
+					"fail": 0
+				},
+				"a) Série temporal com temperatura e umidade do ar": {
+					"pass": 1,
+					"fail": 0
+				},
+				"b) Série temporal da umidade do solo": {
+					"pass": 1,
+					"fail": 0
+				},
+				"c) Linha do tempo (state-timeline) do relé": {
+					"pass": 1,
+					"fail": 0
+				},
+				"d) Stat ou Gauge com a luminosidade atual": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Séries usam o intervalo do painel ($__timeFilter)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atualização automática ligada": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				41
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Pelo menos 4 painéis": true,
+					"a) Série temporal com temperatura e umidade do ar": true,
+					"b) Série temporal da umidade do solo": true,
+					"c) Linha do tempo (state-timeline) do relé": true,
+					"d) Stat ou Gauge com a luminosidade atual": true,
+					"Séries usam o intervalo do painel ($__timeFilter)": true,
+					"Atualização automática ligada": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 330,
+	"collection": {
+		"requests": [
+			{
+				"id": "274f4034-9292-408c-8d36-e2ae8cda6d1d",
+				"method": "POST"
+			},
+			{
+				"id": "e2e318a3-8fd7-429c-9bad-9c78547f6c6b",
+				"method": "GET"
+			},
+			{
+				"id": "362b3577-0430-45a4-b043-7a4fe05acb05",
+				"method": "GET"
+			},
+			{
+				"id": "c768823d-ceef-4f94-b2df-8112307eade4",
+				"method": "POST"
+			},
+			{
+				"id": "d80c8931-fe1e-4804-9174-1070a8486eb0",
+				"method": "GET"
+			},
+			{
+				"id": "7033503e-2937-4e7c-911a-1d4180f61c7f",
+				"method": "DELETE"
+			},
+			{
+				"id": "5669e520-d439-4d33-b0c6-18fe08a9ce45",
+				"method": "POST"
+			},
+			{
+				"id": "aa67125c-eb56-40e5-8fe7-bdf3fb2d3172",
+				"method": "GET"
+			},
+			{
+				"id": "6d28efd3-a1e2-404a-8426-1406672eb987",
+				"method": "GET"
+			},
+			{
+				"id": "b52c2733-abb6-47ff-bb63-a0ebfffc08fd",
+				"method": "GET"
+			},
+			{
+				"id": "8001d7be-a799-402d-b5bf-d6a367926c67",
+				"method": "POST"
+			},
+			{
+				"id": "86fe21ed-e475-47ed-84b3-0623c11ecc97",
+				"method": "GET"
+			},
+			{
+				"id": "dbee0677-dec2-4edb-b193-82c6b1e05f37",
+				"method": "GET"
+			}
+		]
+	}
+}

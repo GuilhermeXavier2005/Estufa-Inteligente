@@ -1,0 +1,308 @@
+{
+	"id": "9c7c88d1-d5f5-4254-a412-6a9cb0da93af",
+	"name": "CCM520 - Projeto 2 - Estufa na plataforma FIWARE (template) Copy",
+	"timestamp": "2026-11-17T16:16:57.046Z",
+	"collection_id": "58770408-21225616-6d77-43c7-9d80-3bf167429f2e",
+	"folder_id": "58770408-2cc716a1-6c00-44ac-8938-afa41ed902cd",
+	"environment_id": "0",
+	"totalPass": 31,
+	"delay": 3000,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-11-17T16:16:37.636Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "69a8d79f-19a7-4a4c-9a25-80b8dc20f7c8",
+			"name": "2.1 [Complete o corpo] Grupo de serviço da sua API key",
+			"url": "http://localhost:4041/iot/groups",
+			"time": 39,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"201 Created (ou 409 se o grupo já existia)": true,
+				"Grupo da apikey existe no serviço/caminho da coleção": true,
+				"Tipo Greenhouse": true,
+				"Recurso /iot/json": true,
+				"Dispositivos não provisionados são rejeitados": true
+			},
+			"testPassFailCounts": {
+				"201 Created (ou 409 se o grupo já existia)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Grupo da apikey existe no serviço/caminho da coleção": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Tipo Greenhouse": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Recurso /iot/json": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Dispositivos não provisionados são rejeitados": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				39
+			],
+			"allTests": [
+				{
+					"201 Created (ou 409 se o grupo já existia)": true,
+					"Grupo da apikey existe no serviço/caminho da coleção": true,
+					"Tipo Greenhouse": true,
+					"Recurso /iot/json": true,
+					"Dispositivos não provisionados são rejeitados": true
+				}
+			]
+		},
+		{
+			"id": "cd9d2345-96f2-4f43-b2ff-fff872aa0dbd",
+			"name": "2.2 [Complete o corpo] Dispositivo da estufa",
+			"url": "http://localhost:4041/iot/devices",
+			"time": 19,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"201 Created (ou 409 se já existia)": true,
+				"Dispositivo encontrado no IoT Agent": true,
+				"Mesma apikey do grupo": true,
+				"Entidade e tipo corretos": true,
+				"Transporte MQTT": true,
+				"Atributo temperature (Number, com object_id)": true,
+				"Atributo relativeHumidity (Number, com object_id)": true,
+				"Atributo soilMoisture (Number, com object_id)": true,
+				"Atributo illuminance (Number, com object_id)": true,
+				"Atributo relayState (Number, com object_id)": true,
+				"Atributo windowAngle (Number, com object_id)": true,
+				"Atributo samplingInterval (Number, com object_id)": true,
+				"object_id diferentes entre si": true,
+				"Comando setRelay": true,
+				"Comando setServo": true,
+				"Comando setInterval": true,
+				"Comando setSending": true,
+				"Estático name (Text)": true,
+				"Estático location (geo:json, Point)": true
+			},
+			"testPassFailCounts": {
+				"201 Created (ou 409 se já existia)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Dispositivo encontrado no IoT Agent": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Mesma apikey do grupo": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Entidade e tipo corretos": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Transporte MQTT": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atributo temperature (Number, com object_id)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atributo relativeHumidity (Number, com object_id)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atributo soilMoisture (Number, com object_id)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atributo illuminance (Number, com object_id)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atributo relayState (Number, com object_id)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atributo windowAngle (Number, com object_id)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Atributo samplingInterval (Number, com object_id)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"object_id diferentes entre si": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Comando setRelay": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Comando setServo": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Comando setInterval": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Comando setSending": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estático name (Text)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Estático location (geo:json, Point)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				19
+			],
+			"allTests": [
+				{
+					"201 Created (ou 409 se já existia)": true,
+					"Dispositivo encontrado no IoT Agent": true,
+					"Mesma apikey do grupo": true,
+					"Entidade e tipo corretos": true,
+					"Transporte MQTT": true,
+					"Atributo temperature (Number, com object_id)": true,
+					"Atributo relativeHumidity (Number, com object_id)": true,
+					"Atributo soilMoisture (Number, com object_id)": true,
+					"Atributo illuminance (Number, com object_id)": true,
+					"Atributo relayState (Number, com object_id)": true,
+					"Atributo windowAngle (Number, com object_id)": true,
+					"Atributo samplingInterval (Number, com object_id)": true,
+					"object_id diferentes entre si": true,
+					"Comando setRelay": true,
+					"Comando setServo": true,
+					"Comando setInterval": true,
+					"Comando setSending": true,
+					"Estático name (Text)": true,
+					"Estático location (geo:json, Point)": true
+				}
+			]
+		},
+		{
+			"id": "e5a3c053-dba0-40f4-8a62-2080c7cb5241",
+			"name": "2.3 [Pronto] Quem atende os comandos da estufa?",
+			"url": "http://localhost:1026/v2/registrations",
+			"time": 23,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"A resposta é uma lista de registros": true,
+				"Registro da entidade da estufa": true,
+				"Os 4 comandos são atendidos pelo IoT Agent": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"A resposta é uma lista de registros": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Registro da entidade da estufa": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Os 4 comandos são atendidos pelo IoT Agent": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				23
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"A resposta é uma lista de registros": true,
+					"Registro da entidade da estufa": true,
+					"Os 4 comandos são atendidos pelo IoT Agent": true
+				}
+			]
+		},
+		{
+			"id": "30c10a25-8986-4e84-bd5d-00affbeb9453",
+			"name": "2.4 [Verificação] A medida de teste chegou ao Orion",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001?options=keyValues",
+			"time": 47,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Pelo menos uma medida numérica": true,
+				"TimeInstant da medida": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Pelo menos uma medida numérica": {
+					"pass": 1,
+					"fail": 0
+				},
+				"TimeInstant da medida": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				47
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Pelo menos uma medida numérica": true,
+					"TimeInstant da medida": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 128,
+	"collection": {
+		"requests": [
+			{
+				"id": "69a8d79f-19a7-4a4c-9a25-80b8dc20f7c8",
+				"method": "POST"
+			},
+			{
+				"id": "cd9d2345-96f2-4f43-b2ff-fff872aa0dbd",
+				"method": "POST"
+			},
+			{
+				"id": "e5a3c053-dba0-40f4-8a62-2080c7cb5241",
+				"method": "GET"
+			},
+			{
+				"id": "30c10a25-8986-4e84-bd5d-00affbeb9453",
+				"method": "GET"
+			}
+		]
+	}
+}
