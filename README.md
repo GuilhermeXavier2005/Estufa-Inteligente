@@ -116,7 +116,7 @@ Os componentes e o código MicroPython partem do link do Projeto 1. A ESP32 perm
 
 Verificação do circuito, só com as ligações e sem o código: inicie a simulação e confira as medidas de temperatura e umidade do DHT22 e a de luminosidade do LDR.
 
-![Descrição da imagem](fotos/circuito.jpeg)
+![Descrição da imagem](fotos/circuito.png)
 
 ## 5. Firmware
 
