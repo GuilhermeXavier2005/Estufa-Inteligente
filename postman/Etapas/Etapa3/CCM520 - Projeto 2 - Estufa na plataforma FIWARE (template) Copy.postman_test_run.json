@@ -1,0 +1,631 @@
+{
+	"id": "7c9d7b5b-fbd7-4800-bffc-b3af6870f918",
+	"name": "CCM520 - Projeto 2 - Estufa na plataforma FIWARE (template) Copy",
+	"timestamp": "2026-11-17T16:22:54.497Z",
+	"collection_id": "58770408-21225616-6d77-43c7-9d80-3bf167429f2e",
+	"folder_id": "58770408-ac55f547-89d5-4594-880c-5bcd86996af8",
+	"environment_id": "0",
+	"totalPass": 39,
+	"delay": 3000,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-11-17T16:21:22.805Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "efa4e58c-8202-4635-bb3b-7348261ae90b",
+			"name": "3.1 [Pronto] A estufa está publicando",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001?options=keyValues&attrs=name,temperature,relativeHumidity,soilMoisture,illuminance,relayState,windowAngle,samplingInterval,TimeInstant",
+			"time": 15,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"temperature é número": true,
+				"relativeHumidity é número": true,
+				"soilMoisture é número": true,
+				"illuminance é número": true,
+				"relayState é número": true,
+				"windowAngle é número": true,
+				"samplingInterval é número": true,
+				"name da estufa": true,
+				"Medida recente (menos de 15 s)": true,
+				"Faixas: relé 0/1, janela 0..180, intervalo 2..10": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"temperature é número": {
+					"pass": 1,
+					"fail": 0
+				},
+				"relativeHumidity é número": {
+					"pass": 1,
+					"fail": 0
+				},
+				"soilMoisture é número": {
+					"pass": 1,
+					"fail": 0
+				},
+				"illuminance é número": {
+					"pass": 1,
+					"fail": 0
+				},
+				"relayState é número": {
+					"pass": 1,
+					"fail": 0
+				},
+				"windowAngle é número": {
+					"pass": 1,
+					"fail": 0
+				},
+				"samplingInterval é número": {
+					"pass": 1,
+					"fail": 0
+				},
+				"name da estufa": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Medida recente (menos de 15 s)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Faixas: relé 0/1, janela 0..180, intervalo 2..10": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				15
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"temperature é número": true,
+					"relativeHumidity é número": true,
+					"soilMoisture é número": true,
+					"illuminance é número": true,
+					"relayState é número": true,
+					"windowAngle é número": true,
+					"samplingInterval é número": true,
+					"name da estufa": true,
+					"Medida recente (menos de 15 s)": true,
+					"Faixas: relé 0/1, janela 0..180, intervalo 2..10": true
+				}
+			]
+		},
+		{
+			"id": "5dec0450-fa48-4dde-bea5-2ab0bc0dbca8",
+			"name": "3.2 [Pronto] Ligue o relé",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs",
+			"time": 46,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				46
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		},
+		{
+			"id": "f3c15ad8-14d1-4ab2-9fc5-ff37855f90a9",
+			"name": "3.3 [Pronto] O relé ligou?",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001?options=keyValues&attrs=setRelay_status,setRelay_info,relayState",
+			"time": 14,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"setRelay_status OK (a estufa respondeu)": true,
+				"setRelay_info OK (a estufa executou)": true,
+				"relayState = 1": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"setRelay_status OK (a estufa respondeu)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"setRelay_info OK (a estufa executou)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"relayState = 1": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				14
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"setRelay_status OK (a estufa respondeu)": true,
+					"setRelay_info OK (a estufa executou)": true,
+					"relayState = 1": true
+				}
+			]
+		},
+		{
+			"id": "8e7136ad-8500-44e4-8b01-ffeca53759cb",
+			"name": "3.4 [Pronto] Abra a janela a 90°",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs",
+			"time": 48,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				48
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		},
+		{
+			"id": "674d8bf9-bcbd-41e3-a476-14b4a2fd5965",
+			"name": "3.5 [Verificação] Janela a 90°",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001?options=keyValues&attrs=setServo_status,setServo_info,windowAngle",
+			"time": 12,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"setServo executado": true,
+				"windowAngle = 90": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"setServo executado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"windowAngle = 90": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				12
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"setServo executado": true,
+					"windowAngle = 90": true
+				}
+			]
+		},
+		{
+			"id": "dcebb58c-df31-437f-ac84-bfdb5f45e7f0",
+			"name": "3.6 [Pronto] Comando inválido: janela a 200°",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs",
+			"time": 62,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				62
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		},
+		{
+			"id": "fb3b6d05-b40c-4081-bef8-9cd9436d4ecd",
+			"name": "3.7 [Pronto] A estufa recusou?",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001?options=keyValues&attrs=setServo_status,setServo_info,windowAngle",
+			"time": 12,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"setServo_info começa com ERRO": true,
+				"Janela preservada em 90°": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"setServo_info começa com ERRO": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Janela preservada em 90°": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				12
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"setServo_info começa com ERRO": true,
+					"Janela preservada em 90°": true
+				}
+			]
+		},
+		{
+			"id": "d21d61d7-8763-4a49-87b1-23f4f445642c",
+			"name": "3.8 [Pronto] Colete a cada 5 s",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs",
+			"time": 53,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				53
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		},
+		{
+			"id": "9c65810c-4105-47a0-bb06-cf922dec81a6",
+			"name": "3.9 [Verificação] Intervalo de 5 s",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001?options=keyValues&attrs=setInterval_info,samplingInterval",
+			"time": 13,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"setInterval executado": true,
+				"samplingInterval = 5": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"setInterval executado": {
+					"pass": 1,
+					"fail": 0
+				},
+				"samplingInterval = 5": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"setInterval executado": true,
+					"samplingInterval = 5": true
+				}
+			]
+		},
+		{
+			"id": "5b0c47f0-f980-4f83-b0c3-b9052dcd1a25",
+			"name": "3.10 [Pronto] Intervalo inválido: 30 s",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs",
+			"time": 49,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				49
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		},
+		{
+			"id": "944ae730-b3d4-4d0d-95d9-d329db2b306b",
+			"name": "3.11 [Verificação] Intervalo preservado",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001?options=keyValues&attrs=setInterval_info,samplingInterval",
+			"time": 14,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"setInterval recusado (ERRO)": true,
+				"samplingInterval continua 5": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"setInterval recusado (ERRO)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"samplingInterval continua 5": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				14
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"setInterval recusado (ERRO)": true,
+					"samplingInterval continua 5": true
+				}
+			]
+		},
+		{
+			"id": "1e353716-d79e-447f-aca5-e11133474a54",
+			"name": "3.12 [Pronto] Desative o envio",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs",
+			"time": 49,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				49
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		},
+		{
+			"id": "5e9a6a71-22aa-4544-a052-66dcda395ec0",
+			"name": "3.13 [Verificação] Envio desativado",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs/temperature",
+			"time": 21,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"A temperatura tem o metadado TimeInstant": true,
+				"Nenhuma medida nova em 12 s": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"A temperatura tem o metadado TimeInstant": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Nenhuma medida nova em 12 s": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				21
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"A temperatura tem o metadado TimeInstant": true,
+					"Nenhuma medida nova em 12 s": true
+				}
+			]
+		},
+		{
+			"id": "3d772371-4f69-4507-8dee-2b6ef7aa1201",
+			"name": "3.14 [Pronto] Reative o envio",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs",
+			"time": 50,
+			"responseCode": {
+				"code": 204,
+				"name": "No Content"
+			},
+			"tests": {
+				"204 No Content": true
+			},
+			"testPassFailCounts": {
+				"204 No Content": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				50
+			],
+			"allTests": [
+				{
+					"204 No Content": true
+				}
+			]
+		},
+		{
+			"id": "940dcd58-bce5-4002-a00f-a083b4d80626",
+			"name": "3.15 [Verificação] Envio reativado",
+			"url": "http://localhost:1026/v2/entities/urn:ngsi-ld:Greenhouse:001/attrs/temperature",
+			"time": 21,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Temperatura medida há menos de 8 s": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Temperatura medida há menos de 8 s": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				21
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Temperatura medida há menos de 8 s": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 479,
+	"collection": {
+		"requests": [
+			{
+				"id": "efa4e58c-8202-4635-bb3b-7348261ae90b",
+				"method": "GET"
+			},
+			{
+				"id": "5dec0450-fa48-4dde-bea5-2ab0bc0dbca8",
+				"method": "PATCH"
+			},
+			{
+				"id": "f3c15ad8-14d1-4ab2-9fc5-ff37855f90a9",
+				"method": "GET"
+			},
+			{
+				"id": "8e7136ad-8500-44e4-8b01-ffeca53759cb",
+				"method": "PATCH"
+			},
+			{
+				"id": "674d8bf9-bcbd-41e3-a476-14b4a2fd5965",
+				"method": "GET"
+			},
+			{
+				"id": "dcebb58c-df31-437f-ac84-bfdb5f45e7f0",
+				"method": "PATCH"
+			},
+			{
+				"id": "fb3b6d05-b40c-4081-bef8-9cd9436d4ecd",
+				"method": "GET"
+			},
+			{
+				"id": "d21d61d7-8763-4a49-87b1-23f4f445642c",
+				"method": "PATCH"
+			},
+			{
+				"id": "9c65810c-4105-47a0-bb06-cf922dec81a6",
+				"method": "GET"
+			},
+			{
+				"id": "5b0c47f0-f980-4f83-b0c3-b9052dcd1a25",
+				"method": "PATCH"
+			},
+			{
+				"id": "944ae730-b3d4-4d0d-95d9-d329db2b306b",
+				"method": "GET"
+			},
+			{
+				"id": "1e353716-d79e-447f-aca5-e11133474a54",
+				"method": "PATCH"
+			},
+			{
+				"id": "5e9a6a71-22aa-4544-a052-66dcda395ec0",
+				"method": "GET"
+			},
+			{
+				"id": "3d772371-4f69-4507-8dee-2b6ef7aa1201",
+				"method": "PATCH"
+			},
+			{
+				"id": "940dcd58-bce5-4002-a00f-a083b4d80626",
+				"method": "GET"
+			}
+		]
+	}
+}

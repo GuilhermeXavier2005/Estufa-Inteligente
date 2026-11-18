@@ -1,0 +1,232 @@
+{
+	"id": "284534f2-94ba-4c8e-be04-5beb78fb6df2",
+	"name": "CCM520 - Projeto 2 - Estufa na plataforma FIWARE (template) Copy",
+	"timestamp": "2026-11-17T16:13:47.160Z",
+	"collection_id": "58770408-21225616-6d77-43c7-9d80-3bf167429f2e",
+	"folder_id": "58770408-338de5dd-ef6d-4549-97b5-70d151bd0dbf",
+	"environment_id": "0",
+	"totalPass": 10,
+	"delay": 3000,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-11-17T16:13:27.593Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "39a5912a-4242-44dc-849f-d963ed0a938a",
+			"name": "1.1 [Verificação] Orion no ar",
+			"url": "http://localhost:1026/version",
+			"time": 11,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Orion 4.5.0": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Orion 4.5.0": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				11
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Orion 4.5.0": true
+				}
+			]
+		},
+		{
+			"id": "b0a5f429-779d-4e1f-aefd-5a14364e6fee",
+			"name": "1.2 [Verificação] IoT Agent no ar",
+			"url": "http://localhost:4041/iot/about",
+			"time": 14,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"IoT Agent JSON 3.14.0": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"IoT Agent JSON 3.14.0": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				14
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"IoT Agent JSON 3.14.0": true
+				}
+			]
+		},
+		{
+			"id": "b7c743fe-3c2a-48e5-9f75-55417cebf382",
+			"name": "1.3 [Verificação] Cygnus no ar",
+			"url": "http://localhost:5080/v1/version",
+			"time": 11,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				11
+			],
+			"allTests": [
+				{
+					"Status 200": true
+				}
+			]
+		},
+		{
+			"id": "356578b1-cf10-439a-9c65-2f5f317eaa88",
+			"name": "1.4 [Verificação] Grafana no ar",
+			"url": "http://localhost:3000/api/health",
+			"time": 15,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true,
+				"Banco do Grafana ok": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Banco do Grafana ok": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				15
+			],
+			"allTests": [
+				{
+					"Status 200": true,
+					"Banco do Grafana ok": true
+				}
+			]
+		},
+		{
+			"id": "4563f0cd-870b-4b88-8c6c-9dfddc0b0e92",
+			"name": "1.5 [Verificação] Consumidor no ar",
+			"url": "http://localhost:3001/",
+			"time": 14,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status 200": true
+			},
+			"testPassFailCounts": {
+				"Status 200": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				14
+			],
+			"allTests": [
+				{
+					"Status 200": true
+				}
+			]
+		},
+		{
+			"id": "73285ec5-2509-482a-bb71-a6ce78fcf14a",
+			"name": "1.6 [Verificação] Variável apikey preenchida",
+			"url": "http://localhost:4041/iot/about",
+			"time": 12,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"apikey com 4 a 24 letras e números": true,
+				"apikey diferente do valor de exemplo": true
+			},
+			"testPassFailCounts": {
+				"apikey com 4 a 24 letras e números": {
+					"pass": 1,
+					"fail": 0
+				},
+				"apikey diferente do valor de exemplo": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				12
+			],
+			"allTests": [
+				{
+					"apikey com 4 a 24 letras e números": true,
+					"apikey diferente do valor de exemplo": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 77,
+	"collection": {
+		"requests": [
+			{
+				"id": "39a5912a-4242-44dc-849f-d963ed0a938a",
+				"method": "GET"
+			},
+			{
+				"id": "b0a5f429-779d-4e1f-aefd-5a14364e6fee",
+				"method": "GET"
+			},
+			{
+				"id": "b7c743fe-3c2a-48e5-9f75-55417cebf382",
+				"method": "GET"
+			},
+			{
+				"id": "356578b1-cf10-439a-9c65-2f5f317eaa88",
+				"method": "GET"
+			},
+			{
+				"id": "4563f0cd-870b-4b88-8c6c-9dfddc0b0e92",
+				"method": "GET"
+			},
+			{
+				"id": "73285ec5-2509-482a-bb71-a6ce78fcf14a",
+				"method": "GET"
+			}
+		]
+	}
+}
